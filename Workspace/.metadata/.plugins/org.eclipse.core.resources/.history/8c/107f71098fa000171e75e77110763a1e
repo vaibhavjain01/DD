@@ -1,0 +1,10 @@
+import java.rmi.*;
+import java.rmi.server.UnicastRemoteObject;
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	
+	public rmiServer() throws RemoteException {
+		super(0);
+	}
+}

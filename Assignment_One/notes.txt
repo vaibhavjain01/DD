@@ -1,0 +1,40 @@
+3 campus
+a, b, c
+
+RecordID = RR10000
+Date = 
+Room Number = 
+List of available times = (applies everyday)
+Booked_by (student ID), if booked, else null
+"allowed to add more"
+
+
+Date = key, (room num = key, timeslot list = value) = value
+
+Users
+Admin	(ID = DVLA1111)
+Student	(ID = DVLS1111)
+A log file of each user is maintained separately, detailing actions performed on the server system, and the response from the sserver system.
+
+3 admins for 3 servers.
+Create availability of rooms with time slots.
+Operations
+CreateRoom (room num, date, list of time slots)
+DeleteRoom
+
+
+Students
+Can book a room any campus, any time, any date.
+
+Server
+Maintains a booking count for each student. If count = 3, student cant book more rooms. This count resets every week.
+
+For booked room, student receives bookingID.
+
+Maintains a log file containing history of operations. One per server.
+-- Date and time request was sent
+-- Requst type (create room, delete room)
+-- Req parameters (room num, time slots)
+-- Req completed/failed.
+-- Server response.
+

@@ -1,0 +1,36 @@
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	public rmirpc() throws RemoteException {
+		super(0);
+	}
+	
+	public String getMsg() {
+		return MSG;
+	}
+	
+	public static void main(String args[]) throws Exception {
+		System.out.println("Rmi Started");
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		rmirpc rmiObj = new rmirpc();
+		rmiinterface stubObj = (rmiinterface)UnicastRemoteObject.exportObject(rmiObj, 0);
+		Naming.rebind("//localhost/RmiServer", stubObj);
+		System.out.println("PeerServer bound in registry");
+	}
+}

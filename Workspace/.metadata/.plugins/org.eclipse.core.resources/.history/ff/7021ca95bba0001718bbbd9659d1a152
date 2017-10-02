@@ -1,0 +1,8 @@
+import java.rmi.*;
+import java.util.List;
+
+public interface rmiinterface extends Remote{
+	public String getMsg() throws RemoteException;
+	public Integer createRoom(Integer roomNumber, String date, List listOfTimeSlots) throws RemoteException;
+	
+}

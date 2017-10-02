@@ -1,0 +1,7 @@
+import java.rmi.*;
+
+public class client {
+	public static void main(String args[]) throws Exception {
+		rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer")
+	}
+}

@@ -1,0 +1,10 @@
+import java.rmi.*;
+import java.rmi.server.UnicastRemoteObject;
+
+public interface listenToClient extends Remote {
+	
+}
+
+public class rmirpc extends UnicastRemoteObject implements RmiServerIntf{
+
+}
