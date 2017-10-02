@@ -1,0 +1,40 @@
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Repo {
+	Map<Integer, String> TimeSlots = new HashMap<Integer, String>(10,10);
+	Map<String, Integer> RoomSlots = new HashMap<String, Integer>(10, 10);
+	
+	public static void main(String args[]) throws Exception {
+
+		
+		/* RMI Port */
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc();
+		Naming.rebind("//localhost/RmiDVLServer", rmiDvlObj);
+		
+		/* Kirkland Campus */
+		rmirpc rmiKklObj = new rmirpc();
+		Naming.rebind("//localhost/RmiKkLServer", rmiKklObj);
+		
+		/* Westmount */
+		rmirpc rmiWstObj = new rmirpc();
+		Naming.rebind("//localhost/RmiWstServer", rmiWstObj);
+	
+	}
+}

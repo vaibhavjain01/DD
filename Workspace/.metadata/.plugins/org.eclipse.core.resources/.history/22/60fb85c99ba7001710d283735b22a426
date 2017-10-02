@@ -1,0 +1,100 @@
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	public static Map<Integer, List<String>> TimeSlots = new HashMap<Integer, List<String>>(10,10);
+	public static Map<String, Integer> RoomSlots = new HashMap<String, Integer>(10, 10);
+	
+	protected rmirpc() throws RemoteException {
+		super(0);
+	}
+	
+	/* Interface Message Implementation */
+	public String getMsg() {
+		return MSG;
+	}
+	
+	/* Admin */
+	public Integer createRoom(Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		
+		synchronized (this) {
+			if(RoomSlots.containsKey(date))
+			{
+				if(TimeSlots.containsKey(roomNumber))
+				{
+					addTimeSlots(roomNumber, listOfTimeSlots);
+				}
+				else
+				{
+					TimeSlots.put(roomNumber, listOfTimeSlots);
+				}
+			}
+		}
+		
+		return rt;
+	}
+	
+	public Integer deleteRoom(Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	/* Student */
+	public Integer bookRoom(String campusName, Integer roomNumber, String date, String timeSlot) 
+	{
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public String getAvailableTimeSlot(String date) 
+	{
+		String rt = new String("");
+		return rt;
+	}
+	
+	public Integer cancelBooking(String bookingID) 
+	{
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public static void main(String args[]) throws Exception {
+
+		
+		/* RMI Port */
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc();
+		Naming.rebind("//localhost/RmiDVLServer", rmiDvlObj);
+		
+		/* Kirkland Campus */
+		rmirpc rmiKklObj = new rmirpc();
+		Naming.rebind("//localhost/RmiKkLServer", rmiKklObj);
+		
+		/* Westmount */
+		rmirpc rmiWstObj = new rmirpc();
+		Naming.rebind("//localhost/RmiWstServer", rmiWstObj);
+	
+	}
+}

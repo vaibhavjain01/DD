@@ -1,0 +1,69 @@
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	protected rmirpc() throws RemoteException {
+		super(0);
+	}
+	
+	/* Interface Message Implementation */
+	public String getMsg() {
+		return MSG;
+	}
+	
+	/* Admin */
+	public Integer createRoom(Integer roomNumber, String date, 
+			List listOfTimeSlots) {
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public Integer deleteRoom(Integer roomNumber, String date, 
+			List listOfTimeSlots) {
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	/* Student */
+	public Integer bookRoom(String campusName, Integer roomNumber, 
+			String date, String timeSlot) {
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public String getAvailableTimeSlot(String date) {
+		String rt = new String("");
+		return rt;
+	}
+	
+	public Integer cancelBooking(String bookingID) {
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public static void main(String args[]) throws Exception {
+		//System.out.println("Rmi Started");
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc();
+		//Naming.rebind("//localhost/RmiServer", rmiObj);
+		Naming.rebind(args[1], rmiDvlObj);
+		System.out.println("PeerServer bound in registry");
+	}
+}

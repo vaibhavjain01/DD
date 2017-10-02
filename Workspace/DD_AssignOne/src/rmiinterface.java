@@ -6,9 +6,9 @@ public interface rmiinterface extends Remote{
 	
 	/* Admin */
 	public Integer createRoom(Integer roomNumber, String date, 
-			List listOfTimeSlots) throws RemoteException;
+			List<String> listOfTimeSlots) throws RemoteException;
 	public Integer deleteRoom(Integer roomNumber, String date, 
-			List listOfTimeSlots) throws RemoteException;
+			List<String> listOfTimeSlots) throws RemoteException;
 	
 	/* Student */
 	public Integer bookRoom(String campusName, Integer roomNumber, 
