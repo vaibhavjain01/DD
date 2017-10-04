@@ -22,17 +22,17 @@ public class central {
 		WSTServer = inUrl;
 	}
 	
-	public String getDVLServer(String inUrl)
+	public String getDVLServer()
 	{
 		return DVLServer;
 	}
 	
-	public String getKKLServer(String inUrl)
+	public String getKKLServer()
 	{
 		return KKLServer;
 	}
 	
-	public String getWSTServer(String inUrl)
+	public String getWSTServer()
 	{
 		return WSTServer;
 	}

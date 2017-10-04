@@ -17,9 +17,9 @@ import java.util.Map;
 
 class listenThread extends Thread
 {
-	Integer serverPort = null;
-	HashMap<String, String> bookingRecords = null;
-	String response = null;
+	private Integer serverPort = null;
+	public HashMap<String, String> bookingRecords = null;
+	private String response = null;
 	
 	public listenThread(Integer port, HashMap<String, String> inBookingRecords) 
 	{
@@ -107,7 +107,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
 			new HashMap<String, HashMap<Integer, List<String>>>(10, 10);
 	
-	public HashMap<String, String> bookingAvailRecords = new HashMap<String, String>(10, 10);
+	private HashMap<String, String> bookingAvailRecords = new HashMap<String, String>(10, 10);
 	
 	private String serverName = null;
 	listenThread udpListenThread = null;
@@ -142,6 +142,11 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	{
 		Integer rt = new Integer(0);
 		
+		if(validateAdminId(adminId) == -1)
+		{
+			return -1;
+		}
+		
 		if(DateRoomSlots.containsKey(date))
 		{
 			if((DateRoomSlots.get(date)).containsKey(roomNumber))
@@ -154,7 +159,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 						rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
 						if(rt == -1)
 						{
-							System.out.printf("Timeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
+							listOfTimeSlots.remove(j);
+							System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
 							continue;
 						}
 						else
@@ -185,54 +191,62 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	private Integer checkIfConflict(String timeOne, String timeTwo)
 	{
 		Integer rt = new Integer(-1);
-		Integer startOneHours = 0;
-		Integer startOneMins = 0;
-		Integer endOneHours = 0;
-		Integer endOneMins = 0;
-		Integer startTwoHours = 0;
-		Integer startTwoMins = 0;
-		Integer endTwoHours = 0;
-		Integer endTwoMins = 0;
-		
-		String[] result = timeOne.split("-");
-		String[] startHoursMins = result[0].split(":");
-		String[] endHoursMins = result[1].split(":");
-		startOneHours = Integer.parseInt(startHoursMins[0]);
-		startOneMins = Integer.parseInt(startHoursMins[1]);
-		endOneHours = Integer.parseInt(endHoursMins[0]);
-		endOneMins = Integer.parseInt(endHoursMins[1]);
-		
-		result = timeTwo.split("-");
-		startHoursMins = result[0].split(":");
-		endHoursMins = result[1].split(":");
-		startTwoHours = Integer.parseInt(startHoursMins[0]);
-		startTwoMins = Integer.parseInt(startHoursMins[1]);
-		endTwoHours = Integer.parseInt(endHoursMins[0]);
-		endTwoMins = Integer.parseInt(endHoursMins[1]);
-		
-		if(endTwoHours < startOneHours)
+		try
 		{
-			return 0;
-		}
-		else if(endTwoHours == startOneHours)
-		{
-			if(endTwoMins < startOneMins)
+			Integer startOneHours = 0;
+			Integer startOneMins = 0;
+			Integer endOneHours = 0;
+			Integer endOneMins = 0;
+			Integer startTwoHours = 0;
+			Integer startTwoMins = 0;
+			Integer endTwoHours = 0;
+			Integer endTwoMins = 0;
+			
+			String[] result = timeOne.split("-");
+			String[] startHoursMins = result[0].split(":");
+			String[] endHoursMins = result[1].split(":");
+			
+			startOneHours = Integer.parseInt(startHoursMins[0].trim());
+			startOneMins = Integer.parseInt(startHoursMins[1].trim());
+			endOneHours = Integer.parseInt(endHoursMins[0].trim());
+			endOneMins = Integer.parseInt(endHoursMins[1].trim());
+			
+			result = timeTwo.split("-");
+			startHoursMins = result[0].split(":");
+			endHoursMins = result[1].split(":");
+			startTwoHours = Integer.parseInt(startHoursMins[0].trim());
+			startTwoMins = Integer.parseInt(startHoursMins[1].trim());
+			endTwoHours = Integer.parseInt(endHoursMins[0].trim());
+			endTwoMins = Integer.parseInt(endHoursMins[1].trim());
+			
+			if(endTwoHours < startOneHours)
 			{
 				return 0;
 			}
-		}
-		else if(startTwoHours > endOneHours)
-		{
-			return 0;
-		}
-		else if(startTwoHours == endOneHours)
-		{
-			if(startTwoMins > endOneMins)
+			else if(endTwoHours == startOneHours)
+			{
+				if(endTwoMins < startOneMins)
+				{
+					return 0;
+				}
+			}
+			else if(startTwoHours > endOneHours)
 			{
 				return 0;
 			}
+			else if(startTwoHours == endOneHours)
+			{
+				if(startTwoMins > endOneMins)
+				{
+					return 0;
+				}
+			}
 		}
-		
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			rt = -1;
+		}
 		return rt;
 	}
 	
@@ -246,6 +260,12 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		Integer rt = new Integer(0);
 		String bookingName = null;
 		String studentId = null;
+		
+		if(validateAdminId(adminId) == -1)
+		{
+			return -1;
+		}
+		
 		if(DateRoomSlots.containsKey(date))
 		{
 			if((DateRoomSlots.get(date)).containsKey(roomNumber))
@@ -292,9 +312,15 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	}
 	
 	/* Student */
-	public Integer bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
+	public String bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
 	{
-		Integer rt = new Integer(0);
+		String rt = null;
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return null;
+		}
+		
 		if(DateRoomSlots.containsKey(date))
 		{
 			if((DateRoomSlots.get(date)).containsKey(roomNumber))
@@ -305,19 +331,25 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 					if(BookingInfo.containsKey(tmpBookingKey))
 					{
 						System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-						rt = -1;
+						rt = null;
 					}
 					else
 					{
-						BookingInfo.put(tmpBookingKey, genBookingId(studentId, BookingCounter));
 						if(StudentRecord.containsKey(studentId))
 						{
+							if(StudentRecord.get(studentId) == 3)
+							{
+								System.out.println("Maximum Booking Count Reached for this Student ID");
+								return null;
+							}
 							StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
 						}
 						else
 						{
 							StudentRecord.put(studentId, 1);
 						}
+						rt = genBookingId(studentId, BookingCounter);
+						BookingInfo.put(tmpBookingKey, rt);
 						System.out.println("Booking Procedure Successfully Completed");
 					}
 				}
@@ -333,6 +365,12 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		String recordTwo = null;
 		String request = date + "_CheckRoom";
 		String rt = new String("");
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return null;
+		}
+		
 		if(serverName == "DVL")
 		{
 			recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
@@ -349,6 +387,16 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
 		}
 		
+		if(recordOne != null)
+		{
+			rt = rt + recordOne;
+		}
+		if(recordTwo != null)
+		{
+			rt = rt + ", " + recordTwo;
+		}
+		rt = rt + ", " + bookingAvailRecords.get(date);
+				
 		return rt;
 	}
 	
@@ -357,6 +405,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		String record = null;
 		DatagramSocket clientSocket = null;
 		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		
 		try
 		{
 			clientSocket = new DatagramSocket();
@@ -400,6 +449,12 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	public Integer cancelBooking(String studentId, String bookingID) 
 	{
 		Integer rt = new Integer(0);
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return -1;
+		}
+		
 		if(BookingInfo.containsValue(bookingID))
 		{
 			if(studentId == bookingID.substring(0, bookingID.indexOf("_")))
@@ -448,7 +503,97 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			}
 			tmp.put(date, (serverName + " " + Integer.toString(count)));
 		}
-		udpListenThread.bookingRecords = tmp;
+		synchronized (udpListenThread.bookingRecords) {
+			udpListenThread.bookingRecords = tmp;
+		}
+		
 		return tmp;
+	}
+	
+	private Integer validateAdminId(String adminId)
+	{
+		String tmpStr;
+		tmpStr = adminId.substring(0, 4);
+		if(adminId.length() > 8)
+		{
+			return -1;
+		}
+		
+		if(serverName == "DVL")
+		{
+			System.out.println(tmpStr);
+			if((tmpStr.equals("DVLA")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "KKL")
+		{
+			if((tmpStr.equals("KKLA")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "WST")
+		{
+			if((tmpStr.equals("WSTA")) == false)
+			{
+				return -1;
+			}
+		}
+		
+		try
+		{
+			Integer tmp = Integer.parseInt(adminId.substring(4, 8));
+		}
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			return -1;
+		}
+		
+		return 0;
+	}
+	
+	private Integer validateStudentId(String studentId)
+	{
+		if(studentId.length() > 8)
+		{
+			return -1;
+		}
+		
+		if(serverName == "DVL")
+		{
+			if(((studentId.substring(0, 3)).equals("DVLS")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "KKL")
+		{
+			if(((studentId.substring(0, 3)).equals("KKLS")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "WST")
+		{
+			if(((studentId.substring(0, 3)).equals("WSTS")) == false)
+			{
+				return -1;
+			}
+		}
+		
+		try
+		{
+			Integer tmp = Integer.parseInt(studentId.substring(4, 7));
+		}
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			return -1;
+		}
+		
+		return 0;
 	}
 }

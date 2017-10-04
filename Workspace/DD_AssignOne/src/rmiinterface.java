@@ -11,7 +11,7 @@ public interface rmiinterface extends Remote{
 			List<String> listOfTimeSlots) throws RemoteException;
 	
 	/* Student */
-	public Integer bookRoom(String studentId, Integer roomNumber, String date, 
+	public String bookRoom(String studentId, Integer roomNumber, String date, 
 			String timeSlot) throws RemoteException;
 	public String getAvailableTimeSlot(String studentId, String date) throws RemoteException;
 	public Integer cancelBooking(String studentId, String bookingID) throws RemoteException;

@@ -9,6 +9,8 @@ public class AppMain
 	public static void main(String args[]) throws Exception 
 	{
 		central cenRepoObj = new central();
+		String a = "DVL";
+		System.out.println(a.length());
 		
 		/* RMI Port */
 		try {
@@ -40,5 +42,10 @@ public class AppMain
 		/* Westmount */
 		rmirpc rmiWstObj = new rmirpc("WST", 9787, cenRepoObj);
 		Naming.rebind(urlWST, rmiWstObj);
+		
+		System.out.println("Starting Client");
+		/* Client */
+		adminClient client = new adminClient("DVLA1234", cenRepoObj);
+		
 	}
 }

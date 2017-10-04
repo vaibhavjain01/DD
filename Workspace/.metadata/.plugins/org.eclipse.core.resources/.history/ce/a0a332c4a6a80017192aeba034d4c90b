@@ -1,0 +1,46 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.util.HashMap;
+
+class adminClient extends Thread
+{
+	String adminId = "DVLA1111";
+	
+	public adminClient(String inAdminId) 
+	{
+		super();
+		System.out.println("Admin DVLA Started");
+		adminId = inAdminId;
+		start();
+	}
+	
+	public void run()
+	{
+		try
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer");
+			System.out.println(rpcObj.getMsg());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+
+public class client {
+	public static void main(String args[]) throws Exception {
+		try
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer");
+			System.out.println(rpcObj.getMsg());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

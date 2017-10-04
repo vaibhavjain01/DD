@@ -1,0 +1,68 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.util.HashMap;
+
+class adminClient extends Thread
+{
+	String adminId = null;
+	central cenRepoObj = null;
+	
+	public adminClient(String inAdminId, central inCenRepoObj) 
+	{
+		super();
+		System.out.printf("Admin %s Started", inAdminId);
+		adminId = inAdminId;
+		cenRepoObj = inCenRepoObj;
+		start();
+	}
+	
+	public void run()
+	{
+		try
+		{
+
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private rmiinterface getRpcObj()
+	{
+		if(adminId.contains("DVL"))
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getDVLServer());
+		}
+		else if(adminId.contains("KKL"))
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getKKLServer());
+		}
+		else if(adminId.contains("WST"))
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getWSTServer());
+		}
+		else
+		{
+			return null;
+		}
+	}
+}
+
+
+public class client {
+	public static void main(String args[]) throws Exception {
+		try
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer");
+			System.out.println(rpcObj.getMsg());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

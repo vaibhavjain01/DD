@@ -1,0 +1,132 @@
+import java.awt.List;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.util.HashMap;
+import java.util.Random;
+
+class adminClient extends Thread
+{
+	String adminId = null;
+	central cenRepoObj = null;
+	
+	public adminClient(String inAdminId, central inCenRepoObj) 
+	{
+		super();
+		System.out.printf("Admin %s Started", inAdminId);
+		adminId = inAdminId;
+		cenRepoObj = inCenRepoObj;
+		start();
+	}
+	
+	public void run()
+	{
+		rmiinterface rpcObj = getRpcObj();
+		
+		
+	}
+	
+	private Integer createRoomRpc(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		List<String> tmp = new List(10, 10);
+		for(int i = 0; i < 5; i++)
+		{
+			
+		}
+		rpcObj.createRoom(adminId, roomNumGenerator(), dateGenerator(), listOfTimeSlots)
+		return rt;
+	}
+	
+	private Integer deleteRoomRpc(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		
+		return rt;
+	}
+	
+	private Integer bookRoomRpc(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		
+		return rt;
+	}
+	
+	private Integer cancelBooking(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		
+		return rt;
+	}
+	
+	private String timeSlotGenerator()
+	{
+		Random r = new Random();
+		Integer starthour = r.nextInt(24-1) + 1;
+		Integer endhourIn = r.nextInt(3-1) + 1;
+		Integer endhour = starthour + endhourIn;
+		Integer startmins = r.nextInt(60-1) + 1;
+		Integer endmins = r.nextInt(60-1) + 1;
+		return(starthour.toString() + ":" + startmins + " - " + endhour + ":" + endmins);
+	}
+	
+	private Integer roomNumGenerator()
+	{
+		Random r = new Random();
+		Integer room = r.nextInt(210-200) + 200;
+		return(room);
+	}
+	
+	private String dateGenerator()
+	{
+		Random r = new Random();
+		Integer date = r.nextInt(27-20) + 20;
+		Integer month = 10;
+		Integer year = 2017;
+		
+		return (date.toString() + "-" + month.toString() + "-" + year.toString());
+	}
+	
+	private rmiinterface getRpcObj()
+	{
+		rmiinterface rpcObj = null;
+		try
+		{
+			if(adminId.contains("DVL"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getDVLServer());
+			}
+			else if(adminId.contains("KKL"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getKKLServer());
+			}
+			else if(adminId.contains("WST"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getWSTServer());
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return rpcObj;
+	}
+}
+
+
+public class client {
+	public static void main(String args[]) throws Exception {
+		try
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer");
+			System.out.println(rpcObj.getMsg());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

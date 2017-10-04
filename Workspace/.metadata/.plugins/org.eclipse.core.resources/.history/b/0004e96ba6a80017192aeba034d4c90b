@@ -1,0 +1,43 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.util.HashMap;
+
+class adminClient extends Thread
+{
+	String adminId = "DVLA1111";
+	HashMap<String, String> bookingRecords = null;
+	String response = null;
+	
+	public listenThread(Integer port, HashMap<String, String> inBookingRecords) 
+	{
+		super();
+		System.out.println("Thread for UDP connection created");
+		serverPort = port;
+		bookingRecords = inBookingRecords;
+		start();
+	}
+	
+	public void run()
+	{
+		
+	}
+
+}
+
+
+public class client {
+	public static void main(String args[]) throws Exception {
+		try
+		{
+			rmiinterface rpcObj = (rmiinterface)Naming.lookup("//localhost/RmiServer");
+			System.out.println(rpcObj.getMsg());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
