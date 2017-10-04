@@ -1,0 +1,39 @@
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+
+public class AppMain 
+{
+	public static void main(String args[]) throws Exception 
+	{
+		central cenRepoObj = new central();
+		
+		/* RMI Port */
+		try {
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc("DVL", 9587);
+		Naming.rebind("//localhost/RmiDVLServer", rmiDvlObj);
+		cenRepoObj.setDVLServer("//localhost/RmiDVLServer");
+		
+		/* Kirkland Campus */
+		rmirpc rmiKklObj = new rmirpc("KKL", 9687);
+		Naming.rebind("//localhost/RmiKKLServer", rmiKklObj);
+		cenRepoObj.setKKLServer("//localhost/RmiKLServer");
+		
+		/* Westmount */
+		rmirpc rmiWstObj = new rmirpc("WST", 9787);
+		Naming.rebind("//localhost/RmiWstServer", rmiWstObj);
+		cenRepoObj.setWSTServer("//localhost/RmiDVLServer");
+	}
+}

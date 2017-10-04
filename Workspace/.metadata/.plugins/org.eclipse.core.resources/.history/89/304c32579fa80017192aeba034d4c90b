@@ -1,0 +1,44 @@
+
+public class central {
+	private String DVLServer = null;
+	private String KKLServer = null;
+	private String WSTServer = null;
+	private Integer udpPortDVL = null;
+	private Integer udpPortKKL = null;
+	private Integer udpPortWST = null;
+	
+	public void setDVLServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+	
+	public void setKKLServer(String inUrl)
+	{
+		KKLServer = inUrl;
+	}
+	
+	public void setWSTServer(String inUrl)
+	{
+		WSTServer = inUrl;
+	}
+	
+	public String getDVLServer(String inUrl)
+	{
+		return DVLServer;
+	}
+	
+	public String getKKLServer(String inUrl)
+	{
+		return KKLServer;
+	}
+	
+	public String getWSTServer(String inUrl)
+	{
+		return WSTServer;
+	}
+	
+	public void setUdpPortDVL(Integer udpPort)
+	{
+		udpPortDVL = udpPort;
+	}
+}

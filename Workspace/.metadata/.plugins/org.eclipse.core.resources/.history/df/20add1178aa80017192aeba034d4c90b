@@ -1,0 +1,178 @@
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	private Map<String, Integer> StudentRecord = new HashMap<String, Integer>(10, 10);
+	private Integer BookingCounter = new Integer(1);
+	
+	/* BookingInfo contains second element as BookingCounter_StudentID */
+	private Map<String, String> BookingInfo = new HashMap<String, String>(10, 10);
+	
+	private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
+	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
+			new HashMap<String, HashMap<Integer, List<String>>>(10, 10);
+	
+	protected rmirpc() throws RemoteException {
+		super(0);
+	}
+	
+	/* Interface Message Implementation */
+	public String getMsg() {
+		return MSG;
+	}
+	
+	/* Generic */
+	Integer addTimeSlots(List<String> currentTimeSlots, List<String> newTimeSlots)
+	{
+		Integer rt = new Integer(0);
+		// Take care of time slot intersection
+		return rt;
+	}
+	
+	Integer deleteTimeSlots(Integer roomNumber, List<String> listOfTimeSlots)
+	{
+		Integer rt = new Integer(0);
+		// Delete time slots
+		return rt;	
+	}
+	
+	/* Admin */
+	/* Function to create room
+	 * Return
+	 * 0 Success
+	 * -1 Failure
+	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
+	 */
+	public Integer createRoom(Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				rt = addTimeSlots(((DateRoomSlots.get(date)).get(roomNumber)), listOfTimeSlots);
+			}
+			else
+			{
+				(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+			}
+		}
+		else
+		{
+			HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+			tmp.put(roomNumber, listOfTimeSlots);
+			DateRoomSlots.put(date, tmp);
+		}
+			
+		return rt;
+	}
+	
+	
+	public Integer deleteRoom(Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		String bookingName = null;
+		String studentId = null;
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				ListIterator<String> li = listOfTimeSlots.listIterator();
+				List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
+				
+			    while(li.hasNext())
+			    {
+			    	String tmpTimeSlot = li.next();
+			    	bookingName = date + "#" + Integer.toString(roomNumber) + "#" + tmpTimeSlot;
+			    	
+					tmp.remove(tmpTimeSlot);
+				}
+			    
+			    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
+			    {
+			    	(DateRoomSlots.get(date)).remove(roomNumber);
+			    }
+			    
+			    if((DateRoomSlots.get(date)).size() == 0)
+			    {
+			    	DateRoomSlots.remove(date);
+			    }
+			}
+			else
+			{
+				rt = -1;
+			}
+		}
+		else
+		{
+			rt = -1;
+		}
+		
+		return rt;
+	}
+	
+	/* Student */
+	public Integer bookRoom(Integer roomNumber, String date, String timeSlot) 
+	{
+		Integer rt = new Integer(0);
+		if(RoomSlots.containsKey(date))
+		{
+			if(TimeSlots.containsKey(roomNumber))
+			{
+				if(TimeSlots.)
+			}
+		}
+		return rt;
+	}
+	
+	public String getAvailableTimeSlot(String date) 
+	{
+		String rt = new String("");
+		return rt;
+	}
+	
+	public Integer cancelBooking(String bookingID) 
+	{
+		Integer rt = new Integer(0);
+		return rt;
+	}
+	
+	public static void main(String args[]) throws Exception {
+
+		
+		/* RMI Port */
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc();
+		Naming.rebind("//localhost/RmiDVLServer", rmiDvlObj);
+		
+		/* Kirkland Campus */
+		rmirpc rmiKklObj = new rmirpc();
+		Naming.rebind("//localhost/RmiKkLServer", rmiKklObj);
+		
+		/* Westmount */
+		rmirpc rmiWstObj = new rmirpc();
+		Naming.rebind("//localhost/RmiWstServer", rmiWstObj);
+	
+	}
+}

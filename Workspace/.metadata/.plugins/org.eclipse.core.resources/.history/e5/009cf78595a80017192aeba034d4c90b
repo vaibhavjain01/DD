@@ -1,0 +1,349 @@
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+
+class listenThread extends Thread
+{
+	Integer serverPort = null;
+	String response = null;
+	
+	public listenThread(Integer port) 
+	{
+		super();
+		System.out.println("Thread for UDP connection created");
+		serverPort = port;
+		start();
+	}
+	
+	public void run()
+	{
+		try
+		{
+	         DatagramSocket serverSocket = new DatagramSocket(serverPort);
+	         byte[] receiveData = new byte[1024];
+	         byte[] sendData = new byte[1024];
+	         
+	         while(true)
+             {
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                serverSocket.receive(receivePacket);
+                
+                String request = new String( receivePacket.getData());
+                System.out.println("RECEIVED: " + request);
+                InetAddress IPAddress = receivePacket.getAddress();
+                int port = receivePacket.getPort();
+                String response = 
+                sendData = response.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+             }
+		}
+		catch(SocketException e)
+		{
+			e.printStackTrace();
+		}
+	}
+}
+
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	/* StudentName, Number of bookings */
+	private Map<String, Integer> StudentRecord = new HashMap<String, Integer>(10, 10);
+	
+	/* Initialized with 1, and incremented till server lifetime */
+	private Integer BookingCounter = new Integer(1);
+	
+	/* BookingInfo contains key as date_roomnumber_timeslot */
+	/* BookingInfo contains value as StudentID_BookingCounter */
+	private Map<String, String> BookingInfo = new HashMap<String, String>(10, 10);
+	
+	/* RoomNumber(Integer) as key, List of timeslots (Stirngs) as value */
+	private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
+	
+	/* Date(String) as key, hashmap RoomTimeSlots as value */
+	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
+			new HashMap<String, HashMap<Integer, List<String>>>(10, 10);
+	
+	protected rmirpc() throws RemoteException {
+		super(0);
+	}
+	
+	/* Interface Message Implementation */
+	public String getMsg() {
+		return MSG;
+	}
+	
+	/* Generic */
+	private String genBookingId(String studentId, Integer bookingCounter)
+	{
+		return (studentId + "_" + bookingCounter.toString());
+	}
+	
+	/* Admin */
+	/* Function to create room
+	 * Return
+	 * 0 Success
+	 * -1 Failure
+	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
+	 */
+	public Integer createRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
+				for(int i=0; i<cTimeSlots.size(); i++)
+				{
+					for(int j=0; j<listOfTimeSlots.size(); j++)
+					{
+						rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+						if(rt == -1)
+						{
+							System.out.printf("Timeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
+							continue;
+						}
+						else
+						{
+							((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+						}
+					}
+				}
+				
+			}
+			else
+			{
+				(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+			}
+		}
+		else
+		{
+			HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+			tmp.put(roomNumber, listOfTimeSlots);
+			DateRoomSlots.put(date, tmp);
+		}
+		
+		System.out.printf("Timeslots successfully added");			
+		return rt;
+	}
+	
+	private Integer checkIfConflict(String timeOne, String timeTwo)
+	{
+		Integer rt = new Integer(-1);
+		Integer startOneHours = 0;
+		Integer startOneMins = 0;
+		Integer endOneHours = 0;
+		Integer endOneMins = 0;
+		Integer startTwoHours = 0;
+		Integer startTwoMins = 0;
+		Integer endTwoHours = 0;
+		Integer endTwoMins = 0;
+		
+		String[] result = timeOne.split("-");
+		String[] startHoursMins = result[0].split(":");
+		String[] endHoursMins = result[1].split(":");
+		startOneHours = Integer.parseInt(startHoursMins[0]);
+		startOneMins = Integer.parseInt(startHoursMins[1]);
+		endOneHours = Integer.parseInt(endHoursMins[0]);
+		endOneMins = Integer.parseInt(endHoursMins[1]);
+		
+		result = timeTwo.split("-");
+		startHoursMins = result[0].split(":");
+		endHoursMins = result[1].split(":");
+		startTwoHours = Integer.parseInt(startHoursMins[0]);
+		startTwoMins = Integer.parseInt(startHoursMins[1]);
+		endTwoHours = Integer.parseInt(endHoursMins[0]);
+		endTwoMins = Integer.parseInt(endHoursMins[1]);
+		
+		if(endTwoHours < startOneHours)
+		{
+			return 0;
+		}
+		else if(endTwoHours == startOneHours)
+		{
+			if(endTwoMins < startOneMins)
+			{
+				return 0;
+			}
+		}
+		else if(startTwoHours > endOneHours)
+		{
+			return 0;
+		}
+		else if(startTwoHours == endOneHours)
+		{
+			if(startTwoMins > endOneMins)
+			{
+				return 0;
+			}
+		}
+		
+		return rt;
+	}
+	
+	private String genBookingInfoKey(String date, Integer roomNumber, String timeSlot)
+	{
+		return (date + "#" + Integer.toString(roomNumber) + "#" + timeSlot);
+	}
+	
+	public Integer deleteRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		String bookingName = null;
+		String studentId = null;
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				ListIterator<String> li = listOfTimeSlots.listIterator();
+				List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
+				
+			    while(li.hasNext())
+			    {
+			    	String tmpTimeSlot = li.next();
+			    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
+			    	studentId = BookingInfo.get(bookingName);
+			    	studentId = studentId.substring(0, studentId.indexOf("_"));
+			    	BookingInfo.remove(bookingName);
+			    	StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+					tmp.remove(tmpTimeSlot);
+				}
+			    
+			    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
+			    {
+			    	(DateRoomSlots.get(date)).remove(roomNumber);
+			    }
+			    
+			    if((DateRoomSlots.get(date)).size() == 0)
+			    {
+			    	DateRoomSlots.remove(date);
+			    }
+			    
+			    System.out.println("TimsSlot successfully Deleted");
+			}
+			else
+			{
+				System.out.println("No record could be found matching input details");
+				rt = -1;
+			}
+		}
+		else
+		{
+			System.out.println("No record could be found matching input details");
+			rt = -1;
+		}
+		
+		return rt;
+	}
+	
+	/* Student */
+	public Integer bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
+	{
+		Integer rt = new Integer(0);
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
+				{
+					String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
+					if(BookingInfo.containsKey(tmpBookingKey))
+					{
+						System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
+						rt = -1;
+					}
+					else
+					{
+						BookingInfo.put(tmpBookingKey, genBookingId(studentId, BookingCounter));
+						if(StudentRecord.containsKey(studentId))
+						{
+							StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+						}
+						else
+						{
+							StudentRecord.put(studentId, 1);
+						}
+						System.out.println("Booking Procedure Successfully Completed");
+					}
+				}
+			}
+		}
+		
+		return rt;
+	}
+	
+	public String getAvailableTimeSlot(String studentId, String date) 
+	{
+		String rt = new String("");
+		return rt;
+	}
+	
+	public Integer cancelBooking(String studentId, String bookingID) 
+	{
+		Integer rt = new Integer(0);
+		if(BookingInfo.containsValue(bookingID))
+		{
+			if(studentId == bookingID.substring(0, bookingID.indexOf("_")))
+			{
+				BookingInfo.values().remove(bookingID);
+				StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+				System.out.println("Booking Successfully Deleted");
+			}
+			else
+			{
+				rt = -1;
+				System.out.println("A student can only delete his own bookings");
+			}
+		}
+		else
+		{
+			rt = -1;
+			System.out.println("No such booking record with provided bookingID was found");
+		}
+		return rt;
+	}
+	
+	public static void main(String args[]) throws Exception {
+
+		
+		/* RMI Port */
+		try {
+			
+			// Exception handler for creating rmi registry
+			Registry reg = LocateRegistry.createRegistry(1099); // registered port for rmi
+			System.out.println("Rmi port registry created");
+		}
+		catch(RemoteException e) {
+			//e.printStackTrace();
+			System.out.println("Rmi registry already exists");
+		}
+		
+		/* Dorval Campus */
+		rmirpc rmiDvlObj = new rmirpc();
+		Naming.rebind("//localhost/RmiDVLServer", rmiDvlObj);
+		
+		/* Kirkland Campus */
+		rmirpc rmiKklObj = new rmirpc();
+		Naming.rebind("//localhost/RmiKkLServer", rmiKklObj);
+		
+		/* Westmount */
+		rmirpc rmiWstObj = new rmirpc();
+		Naming.rebind("//localhost/RmiWstServer", rmiWstObj);
+	
+	}
+}

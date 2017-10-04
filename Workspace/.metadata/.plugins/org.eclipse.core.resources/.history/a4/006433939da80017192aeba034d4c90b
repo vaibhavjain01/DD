@@ -1,0 +1,6 @@
+
+public class central {
+	String DVLServer = null;
+	String KKLServer = null;
+	String WSTServer = null;
+}

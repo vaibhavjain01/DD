@@ -1,0 +1,36 @@
+
+public class central {
+	String DVLServer = null;
+	String KKLServer = null;
+	String WSTServer = null;
+	
+	public void setDVLServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+	
+	public void setKKLServer(String inUrl)
+	{
+		KKLServer = inUrl;
+	}
+	
+	public void setWSTServer(String inUrl)
+	{
+		WSTServer = inUrl;
+	}
+	
+	public void getDVLServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+	
+	public void getKKLServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+	
+	public void getWSTServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+}

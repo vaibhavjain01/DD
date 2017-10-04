@@ -1,0 +1,11 @@
+
+public class central {
+	String DVLServer = null;
+	String KKLServer = null;
+	String WSTServer = null;
+	
+	public void setDVLServer(String inUrl)
+	{
+		DVLServer = inUrl;
+	}
+}
