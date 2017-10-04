@@ -16,7 +16,7 @@ class adminClient extends Thread
 	private String clientTypeID = null;
 	private central cenRepoObj = null;
 	private Vector<String> bookingId = new Vector<String>(10, 10);
-	private Integer threaddelay = 500;
+	private Integer threaddelay = 100;
 	
 	public adminClient(String inId, central inCenRepoObj) 
 	{
@@ -31,6 +31,40 @@ class adminClient extends Thread
 	{
 		rmiinterface rpcObj = getRpcObj();
 		sendCreateRoom(20, rpcObj);
+		sendDeleteRoom(20, rpcObj);
+		List<String> tmp = new ArrayList<String>();
+		tmp.add("7:30 - 9:30");
+		try {
+			rpcObj.createRoom(clientTypeID, 204, "24-10-2017", tmp);
+			clientTypeID = "DVLS4563";
+			try 
+			{
+				Thread.sleep(1000);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			String rt = rpcObj.bookRoom(clientTypeID, 204, "24-10-2017", tmp.get(0));
+			System.out.println(rt);
+			try 
+			{
+				Thread.sleep(1000);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			Integer rtInt = rpcObj.cancelBooking(clientTypeID, "DVLS4563_1");
+			System.out.println(rtInt);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		clientTypeID = "DVLS4563";
+		//sendBookRoom(600, rpcObj);
+		//sendCancelBooking(20, rpcObj);
 	}
 	
 	private void sendCreateRoom(Integer times, rmiinterface rpcObj)
@@ -54,6 +88,14 @@ class adminClient extends Thread
 		for(int i = 0; i < times; i++)
 		{
 			System.out.println(deleteRoomRpc(rpcObj));
+			try 
+			{
+				Thread.sleep(threaddelay);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -62,6 +104,14 @@ class adminClient extends Thread
 		for(int i = 0; i < times; i++)
 		{
 			System.out.println(bookRoomRpc(rpcObj));
+			try 
+			{
+				Thread.sleep(threaddelay);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -70,6 +120,14 @@ class adminClient extends Thread
 		for(int i = 0; i < times; i++)
 		{
 			System.out.println(cancelBooking(rpcObj));
+			try 
+			{
+				Thread.sleep(threaddelay);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	

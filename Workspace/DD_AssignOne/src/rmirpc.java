@@ -183,7 +183,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			DateRoomSlots.put(date, tmp);
 		}
 		
-		System.out.printf("Timeslots successfully added");
+		System.out.printf("\nTimeslot Addition Procedure Completed");
 		bookingAvailRecords = updateBookingAvailRecord();
 		return rt;
 	}
@@ -277,10 +277,16 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			    {
 			    	String tmpTimeSlot = li.next();
 			    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
-			    	studentId = BookingInfo.get(bookingName);
-			    	studentId = studentId.substring(0, studentId.indexOf("_"));
-			    	BookingInfo.remove(bookingName);
-			    	StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+			    	if(BookingInfo.containsKey(bookingName))
+			    	{
+				    	studentId = BookingInfo.get(bookingName);
+				    	if(studentId != null)
+				    	{			    		
+				    		studentId = studentId.substring(0, studentId.indexOf("_"));
+				    		BookingInfo.remove(bookingName);
+				    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+				    	}
+			    	}
 					tmp.remove(tmpTimeSlot);
 				}
 			    
@@ -457,7 +463,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		
 		if(BookingInfo.containsValue(bookingID))
 		{
-			if(studentId == bookingID.substring(0, bookingID.indexOf("_")))
+			if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
 			{
 				BookingInfo.values().remove(bookingID);
 				StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
@@ -521,7 +527,6 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		
 		if(serverName == "DVL")
 		{
-			System.out.println(tmpStr);
 			if((tmpStr.equals("DVLA")) == false)
 			{
 				return -1;
@@ -564,7 +569,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		
 		if(serverName == "DVL")
 		{
-			if(((studentId.substring(0, 3)).equals("DVLS")) == false)
+			if(((studentId.substring(0, 4)).equals("DVLS")) == false)
 			{
 				return -1;
 			}
@@ -586,7 +591,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		
 		try
 		{
-			Integer tmp = Integer.parseInt(studentId.substring(4, 7));
+			Integer tmp = Integer.parseInt(studentId.substring(4, 8));
 		}
 		catch(NumberFormatException e)
 		{
