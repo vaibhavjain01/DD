@@ -159,8 +159,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 						rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
 						if(rt == -1)
 						{
-							System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
 							listOfTimeSlots.remove(j);
+							System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
 							continue;
 						}
 						else
