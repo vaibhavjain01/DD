@@ -1,0 +1,363 @@
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
+
+class adminClient extends Thread
+{
+	private String clientTypeID = null;
+	private central cenRepoObj = null;
+	private Vector<String> bookingId = new Vector<String>(10, 10);
+	private Integer threaddelay = 100;
+	private Integer operation;
+	private List<String> tmptime = new ArrayList<>(Arrays.asList
+			("01:05 - 02:10",
+			"02:15 - 03:10",
+			"03:15 - 04:10",
+			"04:05 - 05:10",
+			"05:05 - 06:10",
+			"06:05 - 07:10",
+			"07:05 - 08:10",
+			"08:05 - 09:10",
+			"09:05 - 10:10",
+			"10:05 - 11:10",
+			"11:05 - 12:10",
+			"12:05 - 13:10",
+			"13:05 - 14:10",
+			"14:05 - 15:10",
+			"15:05 - 16:10",
+			"16:05 - 17:10",
+			"17:05 - 18:10",
+			"18:05 - 19:10",
+			"19:05 - 20:10",
+			"20:05 - 21:10",
+			"21:05 - 22:10",
+			"22:05 - 23:10"));
+	private List<String> bookings = new ArrayList<>();
+
+	public adminClient(String inId, central inCenRepoObj, Integer inopration) 
+	{
+		super();
+		System.out.printf("Client %s Started", inId);
+		clientTypeID = inId;
+		cenRepoObj = inCenRepoObj;
+		operation = inopration;
+		start();
+	}
+	
+	public void run()
+	{
+		rmiinterface rpcObj = getRpcObj();
+
+		if(operation == 0)
+		{
+			sendCreateRoom(100, rpcObj);
+		}
+		else if(operation == 1)
+		{
+			sendDeleteRoom(100, rpcObj);
+		}
+		else if(operation == 2)
+		{
+			while(true)
+			{
+				sendBookRoom(100, rpcObj);
+				sendCancelBooking(100, rpcObj);
+			}
+		}
+		else if(operation == 3)
+		{
+			sendCheckAvailibility(rpcObj);
+		}
+		/*
+		sendCreateRoom(20, rpcObj);
+		sendDeleteRoom(20, rpcObj);
+		List<String> tmp = new ArrayList<String>();
+		tmp.add("7:30 - 9:30");
+		try {
+			rpcObj.createRoom(clientTypeID, 204, "24-10-2017", tmp);
+			clientTypeID = "DVLS4563";
+			try 
+			{
+				Thread.sleep(1000);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			String rt = rpcObj.bookRoom(clientTypeID, 204, "24-10-2017", tmp.get(0));
+			System.out.println(rt);
+			try 
+			{
+				Thread.sleep(1000);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			Integer rtInt = rpcObj.cancelBooking(clientTypeID, "DVLS4563_1");
+			System.out.println(rtInt);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		clientTypeID = "DVLS4563"; */
+		//sendBookRoom(600, rpcObj);
+		//sendCancelBooking(20, rpcObj);
+	}
+	
+	private Integer sendCheckAvailibility(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		try {
+			rpcObj.getAvailableTimeSlot(clientTypeID, "27-10-2017");
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return rt;
+	}
+	
+	private void sendCreateRoom(Integer times, rmiinterface rpcObj)
+	{
+		for(int room = 200; room < 204; room++)
+		{
+			try 
+			{
+				Integer rt = rpcObj.createRoom(clientTypeID, room, "27-10-2017", tmptime);
+				rt = rpcObj.createRoom(clientTypeID, room, "28-10-2017", tmptime);
+				Thread.sleep(1000);
+			} catch (RemoteException e) 
+			{
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+			/*
+			rpcObj.createRoom(clientTypeID, roomNumGenerator(), dateGenerator(), tmp);
+			System.out.println(createRoomRpc(rpcObj));
+			try 
+			{
+				Thread.sleep(threaddelay);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			*/
+	}
+	
+	private void sendDeleteRoom(Integer times, rmiinterface rpcObj)
+	{
+		for(int room = 200; room < 204; room++)
+		{
+			try 
+			{
+				Integer rt = rpcObj.deleteRoom(clientTypeID, room, "27-10-2017", tmptime);
+				rt = rpcObj.deleteRoom(clientTypeID, room, "28-10-2017", tmptime);
+			} catch (RemoteException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		/*
+		for(int i = 0; i < times; i++)
+		{
+			System.out.println(deleteRoomRpc(rpcObj));
+			try 
+			{
+				Thread.sleep(threaddelay);
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		*/
+	}
+	
+	private void sendBookRoom(Integer times, rmiinterface rpcObj)
+	{
+		for(int room = 200; room < 204; room++)
+		{
+			try 
+			{
+				for(int i = 0; i<tmptime.size(); i++)
+				{
+					String timeslot = tmptime.get(i);
+					
+				String rt = rpcObj.bookRoom(clientTypeID, room, "27-10-2017", timeslot);
+				if(rt != null)
+				{
+					bookings.add(rt);
+				}
+				System.out.println(rt);
+				rt = rpcObj.bookRoom(clientTypeID, room, "28-10-2017", timeslot);
+				if(rt != null)
+				{
+					bookings.add(rt);
+				}
+				System.out.println(rt);
+				bookings.add(rt);
+				}
+			} catch (RemoteException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void sendCancelBooking(Integer times, rmiinterface rpcObj)
+	{
+		for(int i = 0; i<bookings.size(); i++)
+		{
+			try {
+				Integer rt = rpcObj.cancelBooking(clientTypeID, bookings.get(i));
+				bookings.remove(i);
+				System.out.println(rt);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private Integer createRoomRpc(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		List<String> tmp = new ArrayList<String>();
+		for(int i = 0; i < 5; i++)
+		{
+			tmp.add(timeSlotGenerator());
+		}
+		try 
+		{
+			rt = rpcObj.createRoom(clientTypeID, roomNumGenerator(), dateGenerator(), tmp);
+		} catch (RemoteException e) 
+		{	
+			e.printStackTrace();
+		}
+		return rt;
+	}
+	
+	private Integer deleteRoomRpc(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		List<String> tmp = new ArrayList<String>();
+		for(int i = 0; i < 2; i++)
+		{
+			tmp.add(timeSlotGenerator());
+		}
+		try 
+		{
+			rt = rpcObj.deleteRoom(clientTypeID, roomNumGenerator(), dateGenerator(), tmp);
+		} catch (RemoteException e) 
+		{	
+			e.printStackTrace();
+		}
+		return rt;
+	}
+	
+	private String bookRoomRpc(rmiinterface rpcObj)
+	{
+		String rt = null;
+		
+		try 
+		{
+			rt = rpcObj.bookRoom(clientTypeID, 202, dateGenerator(), timeSlotGenerator());
+		} 
+		catch (RemoteException e) 
+		{	
+			e.printStackTrace();
+		}
+		if(rt != null)
+		{
+			bookingId.add(rt);
+		}
+		return rt;
+	}
+	
+	private Integer cancelBooking(rmiinterface rpcObj)
+	{
+		Integer rt = 0;
+		if(bookingId.size() > 0)
+		{
+			try 
+			{
+				rpcObj.cancelBooking(clientTypeID, bookingId.get(0));
+				bookingId.remove(0);
+			} 
+			catch (RemoteException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+		return rt;
+	}
+	
+	private String timeSlotGenerator()
+	{
+		Random r = new Random();
+		Integer starthour = r.nextInt(24-1) + 1;
+		Integer endhourIn = r.nextInt(3-1) + 1;
+		Integer endhour = starthour + endhourIn;
+		Integer startmins = r.nextInt(60-1) + 1;
+		Integer endmins = r.nextInt(60-1) + 1;
+		return(starthour.toString() + ":" + startmins + " - " + endhour + ":" + endmins);
+	}
+	
+	private Integer roomNumGenerator()
+	{
+		Random r = new Random();
+		Integer room = r.nextInt(210-200) + 200;
+		return(room);
+	}
+	
+	private String dateGenerator()
+	{
+		Random r = new Random();
+		Integer date = r.nextInt(27-20) + 20;
+		Integer month = 10;
+		Integer year = 2017;
+		
+		return (date.toString() + "-" + month.toString() + "-" + year.toString());
+	}
+	
+	private rmiinterface getRpcObj()
+	{
+		rmiinterface rpcObj = null;
+		try
+		{
+			if(clientTypeID.contains("DVL"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getDVLServer());
+			}
+			else if(clientTypeID.contains("KKL"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getKKLServer());
+			}
+			else if(clientTypeID.contains("WST"))
+			{
+				rpcObj = (rmiinterface)Naming.lookup(cenRepoObj.getWSTServer());
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return rpcObj;
+	}
+}

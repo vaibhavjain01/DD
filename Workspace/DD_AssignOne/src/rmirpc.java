@@ -9,6 +9,8 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -35,13 +37,14 @@ class listenThread extends Thread
 		DatagramSocket serverSocket = null;
 		try
 		{
-	         serverSocket = new DatagramSocket(serverPort);
 	         byte[] receiveData = new byte[1024];
 	         byte[] sendData = new byte[1024];
 	         
 	         while(true)
              {
+	        	serverSocket = new DatagramSocket(serverPort);
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                System.out.printf("\nListening on port %d\n", serverPort);
                 serverSocket.receive(receivePacket);
                 
                 String request = new String( receivePacket.getData());
@@ -55,10 +58,14 @@ class listenThread extends Thread
                 int port = receivePacket.getPort();
                 
                 response = getDateAvailRecord(request.substring(0, request.indexOf("_")));
+                if(response != null)
+                {
+                	sendData = response.getBytes();
+                }
                 
-                sendData = response.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
                 serverSocket.send(sendPacket);
+                serverSocket.close();
                 
              }
 		}
@@ -147,40 +154,43 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			return -1;
 		}
 		
-		if(DateRoomSlots.containsKey(date))
+		synchronized(DateRoomSlots)
 		{
-			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			if(DateRoomSlots.containsKey(date))
 			{
-				List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
-				for(int i=0; i<cTimeSlots.size(); i++)
+				if((DateRoomSlots.get(date)).containsKey(roomNumber))
 				{
-					for(int j=0; j<listOfTimeSlots.size(); j++)
+					List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
+					for(int i=0; i<cTimeSlots.size(); i++)
 					{
-						rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
-						if(rt == -1)
+						for(int j=0; j<listOfTimeSlots.size(); j++)
 						{
-							System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
-							listOfTimeSlots.remove(j);
-							continue;
-						}
-						else
-						{
-							((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+							rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+							if(rt == -1)
+							{
+								//System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
+								listOfTimeSlots.remove(j);
+								continue;
+							}
+							else
+							{
+								((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+							}
 						}
 					}
+					
 				}
-				
+				else
+				{
+					(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+				}
 			}
 			else
 			{
-				(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+				HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+				tmp.put(roomNumber, listOfTimeSlots);
+				DateRoomSlots.put(date, tmp);
 			}
-		}
-		else
-		{
-			HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
-			tmp.put(roomNumber, listOfTimeSlots);
-			DateRoomSlots.put(date, tmp);
 		}
 		
 		System.out.printf("\nTimeslot Addition Procedure Completed");
@@ -327,36 +337,39 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			return null;
 		}
 		
-		if(DateRoomSlots.containsKey(date))
+		synchronized(DateRoomSlots)
 		{
-			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			if(DateRoomSlots.containsKey(date))
 			{
-				if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
+				if((DateRoomSlots.get(date)).containsKey(roomNumber))
 				{
-					String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
-					if(BookingInfo.containsKey(tmpBookingKey))
+					if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
 					{
-						System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-						rt = null;
-					}
-					else
-					{
-						if(StudentRecord.containsKey(studentId))
+						String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
+						if(BookingInfo.containsKey(tmpBookingKey))
 						{
-							if(StudentRecord.get(studentId) == 3)
-							{
-								System.out.println("Maximum Booking Count Reached for this Student ID");
-								return null;
-							}
-							StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+							System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
+							rt = null;
 						}
 						else
 						{
-							StudentRecord.put(studentId, 1);
+							if(StudentRecord.containsKey(studentId))
+							{
+								if(StudentRecord.get(studentId) == 3)
+								{
+									System.out.println("Maximum Booking Count Reached for this Student ID");
+									return null;
+								}
+								StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+							}
+							else
+							{
+								StudentRecord.put(studentId, 1);
+							}
+							rt = genBookingId(studentId, BookingCounter);
+							BookingInfo.put(tmpBookingKey, rt);
+							System.out.println("Booking Procedure Successfully Completed");
 						}
-						rt = genBookingId(studentId, BookingCounter);
-						BookingInfo.put(tmpBookingKey, rt);
-						System.out.println("Booking Procedure Successfully Completed");
 					}
 				}
 			}
@@ -392,16 +405,23 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
 			recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
 		}
-		
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(recordOne != null)
 		{
-			rt = rt + recordOne;
+			rt = rt.concat(recordOne);
 		}
 		if(recordTwo != null)
 		{
-			rt = rt + ", " + recordTwo;
+			rt = rt.concat(", ");
+			rt = rt.concat(recordTwo);
 		}
-		rt = rt + ", " + bookingAvailRecords.get(date);
+		rt = rt.concat(", ");
+		rt = rt.concat(bookingAvailRecords.get(date));
 				
 		return rt;
 	}
@@ -415,18 +435,33 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		try
 		{
 			clientSocket = new DatagramSocket();
-		    InetAddress IPAddress = InetAddress.getByName(inUrl);
+		    InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
 		    byte[] sendData = new byte[1024];
 		    byte[] receiveData = new byte[1024];
+		    int i = 0;
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
+		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
 		    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		    clientSocket.receive(receivePacket);
-		    String response = new String(receivePacket.getData());
+		    if(receiveData[0] == 0)
+		    {
+		    	return null;
+		    }
+		    for(i = 0; i < receiveData.length; i++)
+		    {
+		    	if(receiveData[i] == 0)
+		    	{
+		    		break;
+		    	}
+		    }
+		    receiveData.toString();
+		    String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+		    
 		    System.out.println("FROM SERVER:" + response);
 		    record = response;
 		}
@@ -442,6 +477,10 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		{
 			e.printStackTrace();
 		}
+		catch(NegativeArraySizeException e)
+		{
+			// Handled
+		}
 		finally
 		{
 			if(clientSocket != null)
@@ -449,6 +488,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				clientSocket.close();
 			}
 		}
+		
 		return record;
 	}
 	
@@ -461,25 +501,32 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			return -1;
 		}
 		
-		if(BookingInfo.containsValue(bookingID))
+		synchronized (BookingInfo) 
 		{
-			if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+			if(BookingInfo.containsValue(bookingID))
 			{
-				BookingInfo.values().remove(bookingID);
-				StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
-				System.out.println("Booking Successfully Deleted");
+				if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+				{
+					BookingInfo.values().remove(bookingID);
+					synchronized (StudentRecord)
+					{
+						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+					}
+						System.out.println("Booking Successfully Deleted");
+				}
+				else
+				{
+					rt = -1;
+					System.out.println("A student can only delete his own bookings");
+				}
 			}
 			else
 			{
 				rt = -1;
-				System.out.println("A student can only delete his own bookings");
+				System.out.println("No such booking record with provided bookingID was found");
 			}
 		}
-		else
-		{
-			rt = -1;
-			System.out.println("No such booking record with provided bookingID was found");
-		}
+		
 		bookingAvailRecords = updateBookingAvailRecord();
 		return rt;
 	}
@@ -488,26 +535,40 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	{
 		HashMap<String, String> tmp = new HashMap<String, String>();
 		
-		for(String date : DateRoomSlots.keySet())
+		synchronized(DateRoomSlots)
 		{
-			Integer count = new Integer(0);
-			for(Integer room : (DateRoomSlots.get(date)).keySet())
+			for(String date : DateRoomSlots.keySet())
 			{
-				ListIterator<String> li = ((DateRoomSlots.get(date)).get(room)).listIterator();
-				while(li.hasNext())
+				Integer count = new Integer(0);
+				for(Integer room : (DateRoomSlots.get(date)).keySet())
 				{
-					String tmpTimeSlot = li.next();
-					if(BookingInfo.containsKey(genBookingInfoKey(date, room, tmpTimeSlot)))
+					ListIterator<String> li = ((DateRoomSlots.get(date)).get(room)).listIterator();
+					try
 					{
-						continue;
+						while(li.hasNext())
+						{
+							String tmpTimeSlot = li.next();
+							synchronized(BookingInfo)
+							{
+								if(BookingInfo.containsKey(genBookingInfoKey(date, room, tmpTimeSlot)))
+								{
+									continue;
+								}
+								else
+								{
+									count++;
+								}
+							}
+						}
 					}
-					else
+					catch(ConcurrentModificationException e)
 					{
-						count++;
+						System.out.println("Concurrent Modification Exception Handled");
 					}
+					
 				}
+				tmp.put(date, (serverName + " " + Integer.toString(count)));
 			}
-			tmp.put(date, (serverName + " " + Integer.toString(count)));
 		}
 		synchronized (udpListenThread.bookingRecords) {
 			udpListenThread.bookingRecords = tmp;

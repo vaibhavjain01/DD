@@ -1,3 +1,5 @@
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -30,6 +32,9 @@ public class AppMain
 		cenRepoObj.setDVLServer(urlDVL);
 		cenRepoObj.setKKLServer(urlKKL);
 		cenRepoObj.setWSTServer(urlWST);
+		cenRepoObj.setUdpPortDVL(9587);
+		cenRepoObj.setUdpPortKKL(9687);
+		cenRepoObj.setUdpPortWST(9787);
 		
 		/* Dorval Campus */
 		rmirpc rmiDvlObj = new rmirpc("DVL", 9587, cenRepoObj);
@@ -45,7 +50,53 @@ public class AppMain
 		
 		System.out.println("Starting Client");
 		/* Client */
-		adminClient client = new adminClient("DVLA1234", cenRepoObj);
+		for(int i=0; i<1; i++)
+		{
+			String clientId = "";
+			String clientId2 = "";
+			String clientId3 = "";
+			
+			if((i >= 0) && (i <= 9))
+			{
+				clientId = "DVLA123" + i;
+				clientId2 = "KKLA123" + i;
+				clientId3 = "WSTA123" + i;
+			}
+			else if((i >= 10) && (i <= 99))
+			{
+				clientId = "DVLA12" + i;
+				clientId2 = "KKLA12" + i;
+				clientId3 = "WSTA12" + i;
+			}
+			else if((i >= 100) && (i <= 999))
+			{
+				clientId = "DVLA1" + i;
+				clientId2 = "KKLA1" + i;
+				clientId3 = "WSTA1" + i;
+			}
+			
+			Thread.sleep(2000);
+			adminClient client = new adminClient(clientId, cenRepoObj, 0);
+			Thread.sleep(2000);
+			adminClient client2 = new adminClient(clientId2, cenRepoObj, 0);
+			Thread.sleep(2000);
+			adminClient client3 = new adminClient(clientId3, cenRepoObj, 0);
+			
+			if((i >= 0) && (i <= 9))
+			{
+				clientId = "DVLS123" + i;
+			}
+			else if((i >= 10) && (i <= 99))
+			{
+				clientId = "DVLS12" + i;
+			}
+			else if((i >= 100) && (i <= 999))
+			{
+				clientId = "DVLS1" + i;
+			}
+			Thread.sleep(9000);
+			adminClient client4 = new adminClient(clientId, cenRepoObj, 3);
+		}
 		
 	}
 }

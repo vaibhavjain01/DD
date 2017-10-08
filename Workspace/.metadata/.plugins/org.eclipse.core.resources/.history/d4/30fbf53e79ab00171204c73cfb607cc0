@@ -1,0 +1,613 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+
+class listenThread extends Thread
+{
+	private Integer serverPort = null;
+	public HashMap<String, String> bookingRecords = null;
+	private String response = null;
+	
+	public listenThread(Integer port, HashMap<String, String> inBookingRecords) 
+	{
+		super();
+		System.out.println("Thread for UDP connection created");
+		serverPort = port;
+		bookingRecords = inBookingRecords;
+		start();
+	}
+	
+	public void run()
+	{
+		DatagramSocket serverSocket = null;
+		try
+		{
+	         serverSocket = new DatagramSocket(serverPort);
+	         byte[] receiveData = new byte[1024];
+	         byte[] sendData = new byte[1024];
+	         
+	         while(true)
+             {
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                serverSocket.receive(receivePacket);
+                
+                String request = new String( receivePacket.getData());
+                if(request.contains("_CheckRoom") == false)
+                {
+                	System.out.println("Unauthenticated Request Discarded");
+                	continue;
+                }
+                //System.out.println("RECEIVED: " + request);
+                InetAddress IPAddress = receivePacket.getAddress();
+                int port = receivePacket.getPort();
+                
+                response = getDateAvailRecord(request.substring(0, request.indexOf("_")));
+                
+                sendData = response.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+                
+             }
+		}
+		catch(SocketException e)
+		{
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+ 		{
+			if(serverSocket != null)
+			{
+				serverSocket.close();
+			}
+ 		}
+	}
+	
+	private String getDateAvailRecord(String date)
+	{
+		return bookingRecords.get(date);
+	}
+}
+
+
+public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+	public static final String MSG = "Hello World";
+	private static final long serialVersionUID = 1L;
+	
+	/* StudentName, Number of bookings */
+	private Map<String, Integer> StudentRecord = new HashMap<String, Integer>(10, 10);
+	
+	/* Initialized with 1, and incremented till server lifetime */
+	private Integer BookingCounter = new Integer(1);
+	
+	/* BookingInfo contains key as date_roomnumber_timeslot */
+	/* BookingInfo contains value as StudentID_BookingCounter */
+	private Map<String, String> BookingInfo = new HashMap<String, String>(10, 10);
+	
+	/* RoomNumber(Integer) as key, List of timeslots (Stirngs) as value */
+	private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
+	
+	/* Date(String) as key, hashmap RoomTimeSlots as value */
+	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
+			new HashMap<String, HashMap<Integer, List<String>>>(10, 10);
+	
+	private HashMap<String, String> bookingAvailRecords = new HashMap<String, String>(10, 10);
+	
+	private String serverName = null;
+	listenThread udpListenThread = null;
+	central cenRepoObj = null;
+	
+	protected rmirpc(String inServerName, Integer udpPort, central inCenRepoObj) throws RemoteException {
+		super(0);
+		serverName = inServerName;
+		cenRepoObj = inCenRepoObj;
+		udpListenThread = new listenThread(udpPort, bookingAvailRecords);
+	}
+	
+	/* Interface Message Implementation */
+	public String getMsg() {
+		return MSG;
+	}
+	
+	/* Generic */
+	private String genBookingId(String studentId, Integer bookingCounter)
+	{
+		return (studentId + "_" + bookingCounter.toString());
+	}
+	
+	/* Admin */
+	/* Function to create room
+	 * Return
+	 * 0 Success
+	 * -1 Failure
+	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
+	 */
+	public Integer createRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		
+		if(validateAdminId(adminId) == -1)
+		{
+			return -1;
+		}
+		
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
+				for(int i=0; i<cTimeSlots.size(); i++)
+				{
+					for(int j=0; j<listOfTimeSlots.size(); j++)
+					{
+						rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+						if(rt == -1)
+						{
+							System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
+							listOfTimeSlots.remove(j);
+							continue;
+						}
+						else
+						{
+							((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+						}
+					}
+				}
+				
+			}
+			else
+			{
+				(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+			}
+		}
+		else
+		{
+			HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+			tmp.put(roomNumber, listOfTimeSlots);
+			DateRoomSlots.put(date, tmp);
+		}
+		
+		System.out.printf("\nTimeslot Addition Procedure Completed");
+		bookingAvailRecords = updateBookingAvailRecord();
+		return rt;
+	}
+	
+	private Integer checkIfConflict(String timeOne, String timeTwo)
+	{
+		Integer rt = new Integer(-1);
+		try
+		{
+			Integer startOneHours = 0;
+			Integer startOneMins = 0;
+			Integer endOneHours = 0;
+			Integer endOneMins = 0;
+			Integer startTwoHours = 0;
+			Integer startTwoMins = 0;
+			Integer endTwoHours = 0;
+			Integer endTwoMins = 0;
+			
+			String[] result = timeOne.split("-");
+			String[] startHoursMins = result[0].split(":");
+			String[] endHoursMins = result[1].split(":");
+			
+			startOneHours = Integer.parseInt(startHoursMins[0].trim());
+			startOneMins = Integer.parseInt(startHoursMins[1].trim());
+			endOneHours = Integer.parseInt(endHoursMins[0].trim());
+			endOneMins = Integer.parseInt(endHoursMins[1].trim());
+			
+			result = timeTwo.split("-");
+			startHoursMins = result[0].split(":");
+			endHoursMins = result[1].split(":");
+			startTwoHours = Integer.parseInt(startHoursMins[0].trim());
+			startTwoMins = Integer.parseInt(startHoursMins[1].trim());
+			endTwoHours = Integer.parseInt(endHoursMins[0].trim());
+			endTwoMins = Integer.parseInt(endHoursMins[1].trim());
+			
+			if(endTwoHours < startOneHours)
+			{
+				return 0;
+			}
+			else if(endTwoHours == startOneHours)
+			{
+				if(endTwoMins < startOneMins)
+				{
+					return 0;
+				}
+			}
+			else if(startTwoHours > endOneHours)
+			{
+				return 0;
+			}
+			else if(startTwoHours == endOneHours)
+			{
+				if(startTwoMins > endOneMins)
+				{
+					return 0;
+				}
+			}
+		}
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			rt = -1;
+		}
+		return rt;
+	}
+	
+	private String genBookingInfoKey(String date, Integer roomNumber, String timeSlot)
+	{
+		return (date + "#" + Integer.toString(roomNumber) + "#" + timeSlot);
+	}
+	
+	public Integer deleteRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	{
+		Integer rt = new Integer(0);
+		String bookingName = null;
+		String studentId = null;
+		
+		if(validateAdminId(adminId) == -1)
+		{
+			return -1;
+		}
+		
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				ListIterator<String> li = listOfTimeSlots.listIterator();
+				List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
+				
+			    while(li.hasNext())
+			    {
+			    	String tmpTimeSlot = li.next();
+			    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
+			    	if(BookingInfo.containsKey(bookingName))
+			    	{
+				    	studentId = BookingInfo.get(bookingName);
+				    	if(studentId != null)
+				    	{			    		
+				    		studentId = studentId.substring(0, studentId.indexOf("_"));
+				    		BookingInfo.remove(bookingName);
+				    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+				    	}
+			    	}
+					tmp.remove(tmpTimeSlot);
+				}
+			    
+			    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
+			    {
+			    	(DateRoomSlots.get(date)).remove(roomNumber);
+			    }
+			    
+			    if((DateRoomSlots.get(date)).size() == 0)
+			    {
+			    	DateRoomSlots.remove(date);
+			    }
+			    
+			    System.out.println("TimsSlot successfully Deleted");
+			}
+			else
+			{
+				System.out.println("No record could be found matching input details");
+				rt = -1;
+			}
+		}
+		else
+		{
+			System.out.println("No record could be found matching input details");
+			rt = -1;
+		}
+		bookingAvailRecords = updateBookingAvailRecord();
+		return rt;
+	}
+	
+	/* Student */
+	public String bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
+	{
+		String rt = null;
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return null;
+		}
+		
+		if(DateRoomSlots.containsKey(date))
+		{
+			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			{
+				if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
+				{
+					String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
+					if(BookingInfo.containsKey(tmpBookingKey))
+					{
+						System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
+						rt = null;
+					}
+					else
+					{
+						if(StudentRecord.containsKey(studentId))
+						{
+							if(StudentRecord.get(studentId) == 3)
+							{
+								System.out.println("Maximum Booking Count Reached for this Student ID");
+								return null;
+							}
+							StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+						}
+						else
+						{
+							StudentRecord.put(studentId, 1);
+						}
+						rt = genBookingId(studentId, BookingCounter);
+						BookingInfo.put(tmpBookingKey, rt);
+						System.out.println("Booking Procedure Successfully Completed");
+					}
+				}
+			}
+		}
+		bookingAvailRecords = updateBookingAvailRecord();
+		return rt;
+	}
+	
+	public String getAvailableTimeSlot(String studentId, String date) 
+	{
+		String recordOne = null;
+		String recordTwo = null;
+		String request = date + "_CheckRoom";
+		String rt = new String("");
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return null;
+		}
+		
+		if(serverName == "DVL")
+		{
+			recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+			recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+		}
+		else if(serverName == "KKL")
+		{
+			recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+			recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+		}
+		else if(serverName == "WST")
+		{
+			recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+			recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+		}
+		
+		if(recordOne != null)
+		{
+			rt = rt + recordOne;
+		}
+		if(recordTwo != null)
+		{
+			rt = rt + ", " + recordTwo;
+		}
+		rt = rt + ", " + bookingAvailRecords.get(date);
+				
+		return rt;
+	}
+	
+	private String getAvailableRecordFromServer(String inUrl, Integer inUdpPort, String request)
+	{
+		String record = null;
+		DatagramSocket clientSocket = null;
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		
+		try
+		{
+			clientSocket = new DatagramSocket();
+		    InetAddress IPAddress = InetAddress.getByName(inUrl);
+		    byte[] sendData = new byte[1024];
+		    byte[] receiveData = new byte[1024];
+		    
+		    String sentence = request;
+		    sendData = sentence.getBytes();
+		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
+		    clientSocket.send(sendPacket);
+		    
+		    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		    clientSocket.receive(receivePacket);
+		    String response = new String(receivePacket.getData());
+		    System.out.println("FROM SERVER:" + response);
+		    record = response;
+		}
+		catch(SocketException e)
+		{
+			e.printStackTrace();
+		}
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			if(clientSocket != null)
+			{
+				clientSocket.close();
+			}
+		}
+		return record;
+	}
+	
+	public Integer cancelBooking(String studentId, String bookingID) 
+	{
+		Integer rt = new Integer(0);
+		
+		if(validateStudentId(studentId) == -1)
+		{
+			return -1;
+		}
+		
+		if(BookingInfo.containsValue(bookingID))
+		{
+			if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+			{
+				BookingInfo.values().remove(bookingID);
+				StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+				System.out.println("Booking Successfully Deleted");
+			}
+			else
+			{
+				rt = -1;
+				System.out.println("A student can only delete his own bookings");
+			}
+		}
+		else
+		{
+			rt = -1;
+			System.out.println("No such booking record with provided bookingID was found");
+		}
+		bookingAvailRecords = updateBookingAvailRecord();
+		return rt;
+	}
+	
+	private HashMap<String, String> updateBookingAvailRecord()
+	{
+		HashMap<String, String> tmp = new HashMap<String, String>();
+		
+		for(String date : DateRoomSlots.keySet())
+		{
+			Integer count = new Integer(0);
+			for(Integer room : (DateRoomSlots.get(date)).keySet())
+			{
+				ListIterator<String> li = ((DateRoomSlots.get(date)).get(room)).listIterator();
+				try
+				{
+					while(li.hasNext())
+					{
+						String tmpTimeSlot = li.next();
+						if(BookingInfo.containsKey(genBookingInfoKey(date, room, tmpTimeSlot)))
+						{
+							continue;
+						}
+						else
+						{
+							count++;
+						}
+					}
+				}
+				catch(ConcurrentModificationException e)
+				{
+					print("ConcurrentModificationException Handled");
+				}
+				
+			}
+			tmp.put(date, (serverName + " " + Integer.toString(count)));
+		}
+		synchronized (udpListenThread.bookingRecords) {
+			udpListenThread.bookingRecords = tmp;
+		}
+		
+		return tmp;
+	}
+	
+	private Integer validateAdminId(String adminId)
+	{
+		String tmpStr;
+		tmpStr = adminId.substring(0, 4);
+		if(adminId.length() > 8)
+		{
+			return -1;
+		}
+		
+		if(serverName == "DVL")
+		{
+			if((tmpStr.equals("DVLA")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "KKL")
+		{
+			if((tmpStr.equals("KKLA")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "WST")
+		{
+			if((tmpStr.equals("WSTA")) == false)
+			{
+				return -1;
+			}
+		}
+		
+		try
+		{
+			Integer tmp = Integer.parseInt(adminId.substring(4, 8));
+		}
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			return -1;
+		}
+		
+		return 0;
+	}
+	
+	private Integer validateStudentId(String studentId)
+	{
+		if(studentId.length() > 8)
+		{
+			return -1;
+		}
+		
+		if(serverName == "DVL")
+		{
+			if(((studentId.substring(0, 4)).equals("DVLS")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "KKL")
+		{
+			if(((studentId.substring(0, 3)).equals("KKLS")) == false)
+			{
+				return -1;
+			}
+		}
+		else if(serverName == "WST")
+		{
+			if(((studentId.substring(0, 3)).equals("WSTS")) == false)
+			{
+				return -1;
+			}
+		}
+		
+		try
+		{
+			Integer tmp = Integer.parseInt(studentId.substring(4, 8));
+		}
+		catch(NumberFormatException e)
+		{
+			e.printStackTrace();
+			return -1;
+		}
+		
+		return 0;
+	}
+}
