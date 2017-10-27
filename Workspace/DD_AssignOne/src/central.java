@@ -1,4 +1,4 @@
-
+/* Central Repository */
 public class central {
 	private String DVLServer = null;
 	private String KKLServer = null;

@@ -19,38 +19,25 @@ class adminClient extends Thread
 	private Vector<String> bookingId = new Vector<String>(10, 10);
 	private Integer threaddelay = 100;
 	private Integer operation;
+	private Integer RoomNumber;
+	private String Date;
+	
 	private List<String> tmptime = new ArrayList<>(Arrays.asList
 			("01:05 - 02:10",
 			"02:15 - 03:10",
 			"03:15 - 04:10",
-			"04:05 - 05:10",
-			"05:05 - 06:10",
-			"06:05 - 07:10",
-			"07:05 - 08:10",
-			"08:05 - 09:10",
-			"09:05 - 10:10",
-			"10:05 - 11:10",
-			"11:05 - 12:10",
-			"12:05 - 13:10",
-			"13:05 - 14:10",
-			"14:05 - 15:10",
-			"15:05 - 16:10",
-			"16:05 - 17:10",
-			"17:05 - 18:10",
-			"18:05 - 19:10",
-			"19:05 - 20:10",
-			"20:05 - 21:10",
-			"21:05 - 22:10",
-			"22:05 - 23:10"));
+			"04:15 - 05-15"));
 	private List<String> bookings = new ArrayList<>();
 
-	public adminClient(String inId, central inCenRepoObj, Integer inopration) 
+	public adminClient(String inId, central inCenRepoObj, Integer inopration, Integer inRoomNumber, String inDate) 
 	{
 		super();
-		System.out.printf("Client %s Started", inId);
+		//System.out.printf("Client %s Started", inId);
 		clientTypeID = inId;
 		cenRepoObj = inCenRepoObj;
 		operation = inopration;
+		RoomNumber = inRoomNumber;
+		Date = inDate;
 		start();
 	}
 	
@@ -68,10 +55,18 @@ class adminClient extends Thread
 		}
 		else if(operation == 2)
 		{
-			while(true)
+			try 
 			{
 				sendBookRoom(rpcObj);
+				Thread.sleep(300);
+				sendCheckAvailibility(rpcObj);
+				Thread.sleep(300);
 				sendCancelBooking(rpcObj);
+			} 
+			catch (InterruptedException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		else if(operation == 3)
@@ -89,72 +84,55 @@ class adminClient extends Thread
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(rt);
 		return rt;
 	}
 	
 	private void sendCreateRoom(rmiinterface rpcObj)
 	{
-		for(int room = 200; room < 202; room++)
+		try 
 		{
-			try 
-			{
-				Integer rt = rpcObj.createRoom(clientTypeID, room, "27-10-2017", tmptime);
-				rt = rpcObj.createRoom(clientTypeID, room, "28-10-2017", tmptime);
-				Thread.sleep(1000);
-			} catch (RemoteException e) 
-			{
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			Integer rt = rpcObj.createRoom(clientTypeID, RoomNumber, Date, tmptime);
+			Thread.sleep(1000);
+		} 
+		catch (RemoteException e) 
+		{
+			e.printStackTrace();
+		} 
+		catch (InterruptedException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
 	private void sendDeleteRoom(rmiinterface rpcObj)
 	{
-		for(int room = 200; room < 204; room++)
+		try 
 		{
-			try 
-			{
-				Integer rt = rpcObj.deleteRoom(clientTypeID, room, "27-10-2017", tmptime);
-				rt = rpcObj.deleteRoom(clientTypeID, room, "28-10-2017", tmptime);
-			} catch (RemoteException e) 
-			{
-				e.printStackTrace();
-			}
+			Integer rt = rpcObj.deleteRoom(clientTypeID, RoomNumber, Date, tmptime);
+		} 
+		catch (RemoteException e) 
+		{
+			e.printStackTrace();
 		}
 	}
 	
 	private void sendBookRoom(rmiinterface rpcObj)
 	{
-		for(int room = 200; room < 204; room++)
+		try 
 		{
-			try 
+			for(int i = 0; i<tmptime.size(); i++)
 			{
-				for(int i = 0; i<tmptime.size(); i++)
-				{
-					String timeslot = tmptime.get(i);
-					
-				String rt = rpcObj.bookRoom(clientTypeID, room, "27-10-2017", timeslot);
+				String timeslot = tmptime.get(i);
+				String rt = rpcObj.bookRoom(clientTypeID, RoomNumber, Date, timeslot);
 				if(rt != null)
 				{
 					bookings.add(rt);
 				}
-				System.out.println(rt);
-				rt = rpcObj.bookRoom(clientTypeID, room, "28-10-2017", timeslot);
-				if(rt != null)
-				{
-					bookings.add(rt);
-				}
-				System.out.println(rt);
-				bookings.add(rt);
-				}
-			} catch (RemoteException e) 
-			{
-				e.printStackTrace();
 			}
+		} catch (RemoteException e) 
+		{
+			e.printStackTrace();
 		}
 	}
 	
@@ -165,7 +143,6 @@ class adminClient extends Thread
 			try {
 				Integer rt = rpcObj.cancelBooking(clientTypeID, bookings.get(i));
 				bookings.remove(i);
-				System.out.println(rt);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

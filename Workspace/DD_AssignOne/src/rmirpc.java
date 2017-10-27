@@ -1,6 +1,12 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -9,6 +15,8 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -16,17 +24,20 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-
+/* This class contains code to create a UDP listen thread for each server.
+ */
 class listenThread extends Thread
 {
 	private Integer serverPort = null;
+	
+	/* This hashmap is updated after every client operation in RMIInterface thread */
 	public HashMap<String, String> bookingRecords = null;
 	private String response = null;
 	
 	public listenThread(Integer port, HashMap<String, String> inBookingRecords) 
 	{
 		super();
-		System.out.println("Thread for UDP connection created");
+		//System.out.println("Thread for UDP connection created");
 		serverPort = port;
 		bookingRecords = inBookingRecords;
 		start();
@@ -44,7 +55,7 @@ class listenThread extends Thread
              {
 	        	serverSocket = new DatagramSocket(serverPort);
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                System.out.printf("\nListening on port %d\n", serverPort);
+                //System.out.printf("\nListening on port %d\n", serverPort);
                 serverSocket.receive(receivePacket);
                 
                 String request = new String( receivePacket.getData());
@@ -108,7 +119,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	private Map<String, String> BookingInfo = new HashMap<String, String>(10, 10);
 	
 	/* RoomNumber(Integer) as key, List of timeslots (Stirngs) as value */
-	private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
+	//private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
 	
 	/* Date(String) as key, hashmap RoomTimeSlots as value */
 	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
@@ -119,6 +130,9 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	private String serverName = null;
 	listenThread udpListenThread = null;
 	central cenRepoObj = null;
+	
+	/* Log File Output */
+	private FileOutputStream userLog = null;
 	
 	protected rmirpc(String inServerName, Integer udpPort, central inCenRepoObj) throws RemoteException {
 		super(0);
@@ -148,53 +162,111 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	public Integer createRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
 	{
 		Integer rt = new Integer(0);
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(adminId);
+		fileName = fileName.concat(".txt");
+		File logFile = new File(fileName);
+		PrintWriter out = null;
 		
-		if(validateAdminId(adminId) == -1)
+		try
 		{
-			return -1;
-		}
-		
-		synchronized(DateRoomSlots)
-		{
-			if(DateRoomSlots.containsKey(date))
+			if(logFile.exists() && !logFile.isDirectory())
 			{
-				if((DateRoomSlots.get(date)).containsKey(roomNumber))
+				synchronized(this)
 				{
-					List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
-					for(int i=0; i<cTimeSlots.size(); i++)
-					{
-						for(int j=0; j<listOfTimeSlots.size(); j++)
-						{
-							rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
-							if(rt == -1)
-							{
-								//System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
-								listOfTimeSlots.remove(j);
-								continue;
-							}
-							else
-							{
-								((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
-							}
-						}
-					}
-					
-				}
-				else
-				{
-					(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+					out = new PrintWriter(new FileOutputStream(new File(fileName), true));
 				}
 			}
 			else
 			{
-				HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
-				tmp.put(roomNumber, listOfTimeSlots);
-				DateRoomSlots.put(date, tmp);
+				out = new PrintWriter(fileName);
 			}
-		}
+			synchronized(this)
+			{
+			    out.printf("\n\nDate: %s\nTime: %s\nRequestType: CreateRoom"
+			    		+ "\nRequestParam: \n(AdminId = %s)\n(RoomNumber = %d)\n(Date = %s)", 
+			    		LocalDate.now(), LocalTime.now(), adminId, roomNumber, date);
+		    	
+			    out.println("\n(TimeSlots: ");
+				    
+			    for(int i = 0; i < listOfTimeSlots.size(); i++)
+			    {
+			    	out.printf("%s, ", listOfTimeSlots.get(i));
+			    }
+			    
+			    out.println(")");
+		    
+				if(validateAdminId(adminId) == -1)
+				{
+					out.printf("\nRequest Failed\n Server Response: -1");
+					return -1;
+				}
+			}
+			synchronized(DateRoomSlots)
+			{
+				if(DateRoomSlots.containsKey(date))
+				{
+					if((DateRoomSlots.get(date)).containsKey(roomNumber))
+					{
+						List<String> cTimeSlots = ((DateRoomSlots.get(date)).get(roomNumber));
+						for(int i=0; i<cTimeSlots.size(); i++)
+						{
+							for(int j=0; j<listOfTimeSlots.size(); j++)
+							{
+								rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+								if(rt == -1)
+								{
+									//System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
+									listOfTimeSlots.remove(j);
+									continue;
+								}
+								else
+								{
+									((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+								}
+							}
+						}
+						
+					}
+					else
+					{
+						(DateRoomSlots.get(date)).put(roomNumber, listOfTimeSlots);
+						synchronized(this)
+						{
+							out.printf("\nRequest Success for all timeslots");
+						}
+					}
+				}
+				else
+				{
+					HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+					tmp.put(roomNumber, listOfTimeSlots);
+					DateRoomSlots.put(date, tmp);
+					synchronized(this)
+					{
+						out.printf("\nRequest Success for all timeslots");
+					}
+				}
+			}
 		
-		System.out.printf("\nTimeslot Addition Procedure Completed");
-		bookingAvailRecords = updateBookingAvailRecord();
+			System.out.printf("\nTimeslot Addition Procedure Completed");
+			rt = 1;
+			bookingAvailRecords = updateBookingAvailRecord();
+			synchronized(this)
+			{
+				out.printf("\nRequest Completed for Non Conflicted Timeslots\nServer Response %d", rt);
+				out.close();
+			}
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		} 
+		catch (IOException e1) 
+		{
+			e1.printStackTrace();
+		}
 		return rt;
 	}
 	
@@ -271,59 +343,103 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		String bookingName = null;
 		String studentId = null;
 		
-		if(validateAdminId(adminId) == -1)
-		{
-			return -1;
-		}
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(adminId);
+		fileName = fileName.concat(".txt");
+		File logFile = new File(fileName);
+		PrintWriter out = null;
 		
-		if(DateRoomSlots.containsKey(date))
+		try
 		{
-			if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			if(logFile.exists() && !logFile.isDirectory())
 			{
-				ListIterator<String> li = listOfTimeSlots.listIterator();
-				List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
-				
-			    while(li.hasNext())
-			    {
-			    	String tmpTimeSlot = li.next();
-			    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
-			    	if(BookingInfo.containsKey(bookingName))
-			    	{
-				    	studentId = BookingInfo.get(bookingName);
-				    	if(studentId != null)
-				    	{			    		
-				    		studentId = studentId.substring(0, studentId.indexOf("_"));
-				    		BookingInfo.remove(bookingName);
-				    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+				out = new PrintWriter(new FileOutputStream(new File(fileName), true));
+			}
+			else
+			{
+				out = new PrintWriter(fileName);
+			}
+			
+		    out.printf("\\n\nDate: %s\nTime: %s\nRequestType: DeleteRoom"
+		    		+ "\nRequestParam: \n(AdminId = %s)\n(RoomNumber = %d)\n(Date = %s)", 
+		    		LocalDate.now(), LocalTime.now(), adminId, roomNumber, date);
+	    	
+		    out.println("\n(TimeSlots: ");
+	    	
+		    for(int i = 0; i < listOfTimeSlots.size(); i++)
+		    {
+		    	out.printf("%s, ", listOfTimeSlots.get(i));
+		    }
+		    
+		    out.println(")");
+		    
+		
+			if(validateAdminId(adminId) == -1)
+			{
+				out.printf("\nRequest Failed\n Server Response: -1");
+				return -1;
+			}
+			
+			if(DateRoomSlots.containsKey(date))
+			{
+				if((DateRoomSlots.get(date)).containsKey(roomNumber))
+				{
+					ListIterator<String> li = listOfTimeSlots.listIterator();
+					List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
+					
+				    while(li.hasNext())
+				    {
+				    	String tmpTimeSlot = li.next();
+				    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
+				    	if(BookingInfo.containsKey(bookingName))
+				    	{
+					    	studentId = BookingInfo.get(bookingName);
+					    	if(studentId != null)
+					    	{			    		
+					    		studentId = studentId.substring(0, studentId.indexOf("_"));
+					    		BookingInfo.remove(bookingName);
+					    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+					    	}
 				    	}
-			    	}
-					tmp.remove(tmpTimeSlot);
+						tmp.remove(tmpTimeSlot);
+					}
+				    
+				    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
+				    {
+				    	(DateRoomSlots.get(date)).remove(roomNumber);
+				    }
+				    
+				    if((DateRoomSlots.get(date)).size() == 0)
+				    {
+				    	DateRoomSlots.remove(date);
+				    }
+				    
+				    System.out.println("TimsSlot successfully Deleted");
+				    out.printf("\nRequest Success");
 				}
-			    
-			    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
-			    {
-			    	(DateRoomSlots.get(date)).remove(roomNumber);
-			    }
-			    
-			    if((DateRoomSlots.get(date)).size() == 0)
-			    {
-			    	DateRoomSlots.remove(date);
-			    }
-			    
-			    System.out.println("TimsSlot successfully Deleted");
+				else
+				{
+					System.out.println("No record could be found matching input details");
+					out.printf("\nRequest Failed");
+					rt = -1;
+				}
 			}
 			else
 			{
 				System.out.println("No record could be found matching input details");
+				out.printf("\nRequest Failed");
 				rt = -1;
 			}
-		}
-		else
+			bookingAvailRecords = updateBookingAvailRecord();
+			out.printf("\nServer Response: %d", rt);
+			out.close();
+		} 
+		catch (IOException e) 
 		{
-			System.out.println("No record could be found matching input details");
-			rt = -1;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		bookingAvailRecords = updateBookingAvailRecord();
 		return rt;
 	}
 	
@@ -331,49 +447,110 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	public String bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
 	{
 		String rt = null;
+	
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(studentId);
+		fileName = fileName.concat(".txt");
+		File logFile = new File(fileName);
+		PrintWriter out = null;
 		
-		if(validateStudentId(studentId) == -1)
+		try
 		{
-			return null;
-		}
-		
-		synchronized(DateRoomSlots)
-		{
-			if(DateRoomSlots.containsKey(date))
+			synchronized(this)
 			{
-				if((DateRoomSlots.get(date)).containsKey(roomNumber))
+				if(logFile.exists() && !logFile.isDirectory())
 				{
-					if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
+					out = new PrintWriter(new FileOutputStream(new File(fileName), true));
+				}
+				else
+				{
+					out = new PrintWriter(fileName);
+				}
+				
+			    out.printf("\n\nDate: %s\nTime: %s\nRequestType: BookRoom"
+			    		+ "\nRequestParam: \n(StudentId = %s)\n(RoomNumber = %d)\n(Date = %s)", 
+			    		LocalDate.now(), LocalTime.now(), studentId, roomNumber, date);
+		    	
+			    out.printf("\n(TimeSlots: %s)", timeSlot);
+			
+				if(validateStudentId(studentId) == -1)
+				{
+					out.printf("\nRequest Failed");
+					out.printf("\nServer Response: null");
+					return null;
+				}
+			}	
+			synchronized(DateRoomSlots)
+			{
+				if(DateRoomSlots.containsKey(date))
+				{
+					if((DateRoomSlots.get(date)).containsKey(roomNumber))
 					{
-						String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
-						if(BookingInfo.containsKey(tmpBookingKey))
+						if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
 						{
-							System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-							rt = null;
-						}
-						else
-						{
-							if(StudentRecord.containsKey(studentId))
+							String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
+							if(BookingInfo.containsKey(tmpBookingKey))
 							{
-								if(StudentRecord.get(studentId) == 3)
+								System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
+								rt = null;
+								synchronized(this)
 								{
-									System.out.println("Maximum Booking Count Reached for this Student ID");
-									return null;
+									out.printf("\nRequest Failed");
 								}
-								StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
 							}
 							else
 							{
-								StudentRecord.put(studentId, 1);
+								if(StudentRecord.containsKey(studentId))
+								{
+									if(StudentRecord.get(studentId) == 3)
+									{
+										System.out.println("Maximum Booking Count Reached for this Student ID");
+										synchronized(this)										
+										{
+											out.printf("\nRequest Failed");
+											out.printf("\nServer Response: null");
+										}
+										return null;
+									}
+									
+									StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+									BookingCounter = StudentRecord.get(studentId);
+									synchronized(this)
+									{
+										out.printf("\nRequest Success");
+									}
+								}
+								else
+								{
+									BookingCounter = 1;
+									StudentRecord.put(studentId, 1);
+									synchronized(this)
+									{
+										out.printf("\nRequest Success");
+									}
+								}
+								rt = genBookingId(studentId, BookingCounter);
+								BookingCounter = 1;
+								BookingInfo.put(tmpBookingKey, rt);
+								System.out.println("Booking Procedure Successfully Completed");
 							}
-							rt = genBookingId(studentId, BookingCounter);
-							BookingInfo.put(tmpBookingKey, rt);
-							System.out.println("Booking Procedure Successfully Completed");
 						}
 					}
 				}
 			}
+			synchronized(this)
+			{
+				out.printf("\nServer Response: %s", rt);
+				out.close();
+			}
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
 		bookingAvailRecords = updateBookingAvailRecord();
 		return rt;
 	}
@@ -385,44 +562,72 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		String request = date + "_CheckRoom";
 		String rt = new String("");
 		
-		if(validateStudentId(studentId) == -1)
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(studentId);
+		fileName = fileName.concat(".txt");
+		
+		try(FileWriter fw = new FileWriter(fileName, true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter out = new PrintWriter(bw))
 		{
-			return null;
+			synchronized(out)
+			{
+			    out.printf("\n\nDate: %s\nTime: %s\nRequestType: AvailableRooms"
+			    		+ "\nRequestParam: \n(studentId = %s)\n(Date = %s)", 
+			    		LocalDate.now(), LocalTime.now(), studentId, date);
+			
+				if(validateStudentId(studentId) == -1)
+				{
+					out.println("\nRequest Failed\nServer Response: null");
+					return null;
+				}
+				
+				if(serverName == "DVL")
+				{
+					recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+					recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+				}
+				else if(serverName == "KKL")
+				{
+					recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+					recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+				}
+				else if(serverName == "WST")
+				{
+					recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+					recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+				}
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if(recordOne != null)
+				{
+					rt = rt.concat(recordOne);
+				}
+				if(recordTwo != null)
+				{
+					rt = rt.concat(", ");
+					rt = rt.concat(recordTwo);
+				}
+				rt = rt.concat(", ");
+				if(bookingAvailRecords.size() > 0)
+				{
+					rt = rt.concat(bookingAvailRecords.get(date));
+				}
+				out.printf("\nRequest Success\nServer Response: %s", rt);
+				out.close();
+			}
+		} 
+		catch (IOException e1) 
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		
-		if(serverName == "DVL")
-		{
-			recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
-			recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
-		}
-		else if(serverName == "KKL")
-		{
-			recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
-			recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
-		}
-		else if(serverName == "WST")
-		{
-			recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
-			recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
-		}
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if(recordOne != null)
-		{
-			rt = rt.concat(recordOne);
-		}
-		if(recordTwo != null)
-		{
-			rt = rt.concat(", ");
-			rt = rt.concat(recordTwo);
-		}
-		rt = rt.concat(", ");
-		rt = rt.concat(bookingAvailRecords.get(date));
-				
 		return rt;
 	}
 	
@@ -442,7 +647,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
+		    //System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
@@ -462,7 +667,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		    receiveData.toString();
 		    String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
 		    
-		    System.out.println("FROM SERVER:" + response);
+		    //System.out.println("FROM SERVER:" + response);
 		    record = response;
 		}
 		catch(SocketException e)
@@ -495,38 +700,88 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	public Integer cancelBooking(String studentId, String bookingID) 
 	{
 		Integer rt = new Integer(0);
+
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(studentId);
+		fileName = fileName.concat(".txt");
+		File logFile = new File(fileName);
+		PrintWriter out = null;
 		
-		if(validateStudentId(studentId) == -1)
+		try
 		{
-			return -1;
-		}
-		
-		synchronized (BookingInfo) 
-		{
-			if(BookingInfo.containsValue(bookingID))
+			if(logFile.exists() && !logFile.isDirectory())
 			{
-				if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+				synchronized(this)
 				{
-					BookingInfo.values().remove(bookingID);
-					synchronized (StudentRecord)
-					{
-						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
-					}
-						System.out.println("Booking Successfully Deleted");
-				}
-				else
-				{
-					rt = -1;
-					System.out.println("A student can only delete his own bookings");
+					out = new PrintWriter(new FileOutputStream(new File(fileName), true));
 				}
 			}
 			else
 			{
-				rt = -1;
-				System.out.println("No such booking record with provided bookingID was found");
+				out = new PrintWriter(fileName);
 			}
+			
+			synchronized(out)
+			{
+			    out.printf("\n\nDate: %s\nTime: %s\nRequestType: CancelBooking"
+			    		+ "\nRequestParam: \n(studentId = %s)\n(bookingID = %s)", 
+			    		LocalDate.now(), LocalTime.now(), studentId, bookingID);
+				    
+				if(validateStudentId(studentId) == -1)
+				{
+					out.printf("\nRequest Failed\nServer Response: null");
+					return -1;
+				}
+			}
+			synchronized (BookingInfo) 
+			{
+				if(BookingInfo.containsValue(bookingID))
+				{
+					if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+					{
+						BookingInfo.values().remove(bookingID);
+						synchronized (StudentRecord)
+						{
+							StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+						}
+						synchronized(out)
+						{
+							out.printf("\nRequest Success");
+						}
+						System.out.println("Booking Successfully Deleted");
+					}
+					else
+					{
+						rt = -1;
+						synchronized(out)
+						{
+							out.printf("\nRequest Failed");
+						}
+						System.out.println("A student can only delete his own bookings");
+					}
+				}
+				else
+				{
+					rt = -1;
+					synchronized(out)
+					{
+						out.printf("\nRequest Failed");
+					}
+					System.out.println("No such booking record with provided bookingID was found");
+				}
+			}
+			synchronized(out)
+			{
+				out.printf("\nServer Response: %d", rt);
+				out.close();
+			}
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
 		bookingAvailRecords = updateBookingAvailRecord();
 		return rt;
 	}
@@ -637,14 +892,14 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		}
 		else if(serverName == "KKL")
 		{
-			if(((studentId.substring(0, 3)).equals("KKLS")) == false)
+			if(((studentId.substring(0, 4)).equals("KKLS")) == false)
 			{
 				return -1;
 			}
 		}
 		else if(serverName == "WST")
 		{
-			if(((studentId.substring(0, 3)).equals("WSTS")) == false)
+			if(((studentId.substring(0, 4)).equals("WSTS")) == false)
 			{
 				return -1;
 			}
