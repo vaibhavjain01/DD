@@ -1,0 +1,18 @@
+module drrs
+{
+	typedef sequence<string> LISTTimeSlot;
+	
+	interface drrsCorba
+	{
+	/* Admin */
+	void createRoom(in string adminId, in long roomNumber, in string date, in LISTTimeSlot listOfTimeSlots, out long rt);
+	void deleteRoom(in string adminId, in long roomNumber, in string date, in LISTTimeSlot listOfTimeSlots, out long rt);
+	
+	/* Student */
+	void bookRoom(in string studentId, in long roomNumber, in string date, in string timeSlot, out string rt);
+	void getAvailableTimeSlot(in string studentId, in string date, out string rt);
+	void cancelBooking(in string studentId, in string bookingID, out long rt);
+	
+	oneway void shutdown();
+	};
+};

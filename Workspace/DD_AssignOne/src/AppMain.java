@@ -25,28 +25,28 @@ public class AppMain
 			System.out.println("Rmi registry already exists");
 		}
 		
-		String urlDVL = "//localhost/RmiDVLServer";
-		String urlKKL = "//localhost/RmiKKLServer";
-		String urlWST = "//localhost/RmiWSTServer";
+		//String urlDVL = "//localhost/RmiDVLServer";
+		//String urlKKL = "//localhost/RmiKKLServer";
+		//String urlWST = "//localhost/RmiWSTServer";
 		
-		cenRepoObj.setDVLServer(urlDVL);
-		cenRepoObj.setKKLServer(urlKKL);
-		cenRepoObj.setWSTServer(urlWST);
-		cenRepoObj.setUdpPortDVL(portDVL);
-		cenRepoObj.setUdpPortKKL(portKKL);
-		cenRepoObj.setUdpPortWST(portWST);
+		//cenRepoObj.setDVLServer(urlDVL);
+		//cenRepoObj.setKKLServer(urlKKL);
+		//cenRepoObj.setWSTServer(urlWST);
+		//cenRepoObj.setUdpPortDVL(portDVL);
+		//cenRepoObj.setUdpPortKKL(portKKL);
+		//cenRepoObj.setUdpPortWST(portWST);
 		
 		/* Dorval Campus */
-		rmirpc rmiDvlObj = new rmirpc("DVL", portDVL, cenRepoObj);
-		Naming.rebind(urlDVL, rmiDvlObj);
+		//rmirpc rmiDvlObj = new rmirpc("DVL", portDVL, cenRepoObj);
+		//Naming.rebind(urlDVL, rmiDvlObj);
 		
 		/* Kirkland Campus */
-		rmirpc rmiKklObj = new rmirpc("KKL", portKKL, cenRepoObj);
-		Naming.rebind(urlKKL, rmiKklObj);
+		//rmirpc rmiKklObj = new rmirpc("KKL", portKKL, cenRepoObj);
+		//Naming.rebind(urlKKL, rmiKklObj);
 		
 		/* Westmount */
-		rmirpc rmiWstObj = new rmirpc("WST", portWST, cenRepoObj);
-		Naming.rebind(urlWST, rmiWstObj);
+		//rmirpc rmiWstObj = new rmirpc("WST", portWST, cenRepoObj);
+		//Naming.rebind(urlWST, rmiWstObj);
 		
 		
 		return rt;
@@ -93,11 +93,11 @@ public class AppMain
 			try 
 			{
 				//Thread.sleep(200);
-				adminClient client = new adminClient(clientId, cenRepoObj, operation, roomNum, "27-10-2017");
+				//adminClient client = new adminClient(clientId, cenRepoObj, operation, roomNum, "27-10-2017");
 				Thread.sleep(100);
-				adminClient client2 = new adminClient(clientId2, cenRepoObj, operation, roomNum, "27-10-2017");
+				//adminClient client2 = new adminClient(clientId2, cenRepoObj, operation, roomNum, "27-10-2017");
 				Thread.sleep(100);
-				adminClient client3 = new adminClient(clientId3, cenRepoObj, operation, roomNum, "27-10-2017");
+				//adminClient client3 = new adminClient(clientId3, cenRepoObj, operation, roomNum, "27-10-2017");
 			} 
 			catch (Exception e) 
 			{
@@ -148,11 +148,11 @@ public class AppMain
 			
 			try 
 			{
-				adminClient client = new adminClient(clientId, cenRepoObj, opration, roomNum, "27-10-2017");
+				//adminClient client = new adminClient(clientId, cenRepoObj, opration, roomNum, "27-10-2017");
 				Thread.sleep(100);
-				adminClient client2 = new adminClient(clientId2, cenRepoObj, opration, roomNum, "27-10-2017");
+				//adminClient client2 = new adminClient(clientId2, cenRepoObj, opration, roomNum, "27-10-2017");
 				Thread.sleep(100);
-				adminClient client3 = new adminClient(clientId3, cenRepoObj, opration, roomNum, "27-10-2017");
+				//adminClient client3 = new adminClient(clientId3, cenRepoObj, opration, roomNum, "27-10-2017");
 				Thread.sleep(100);
 			} 
 			catch (Exception e) 

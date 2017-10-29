@@ -1,38 +1,40 @@
+import drrs.drrsCorba;
+
 /* Central Repository */
 public class central {
-	private String DVLServer = null;
-	private String KKLServer = null;
-	private String WSTServer = null;
+	private drrsCorba DVLServer = null;
+	private drrsCorba KKLServer = null;
+	private drrsCorba WSTServer = null;
 	private Integer udpPortDVL = null;
 	private Integer udpPortKKL = null;
 	private Integer udpPortWST = null;
 	
-	public void setDVLServer(String inUrl)
+	public void setDVLServer(drrsCorba inUrl)
 	{
 		DVLServer = inUrl;
 	}
 	
-	public void setKKLServer(String inUrl)
+	public void setKKLServer(drrsCorba inUrl)
 	{
 		KKLServer = inUrl;
 	}
 	
-	public void setWSTServer(String inUrl)
+	public void setWSTServer(drrsCorba inUrl)
 	{
 		WSTServer = inUrl;
 	}
 	
-	public String getDVLServer()
+	public drrsCorba getDVLServer()
 	{
 		return DVLServer;
 	}
 	
-	public String getKKLServer()
+	public drrsCorba getKKLServer()
 	{
 		return KKLServer;
 	}
 	
-	public String getWSTServer()
+	public drrsCorba getWSTServer()
 	{
 		return WSTServer;
 	}

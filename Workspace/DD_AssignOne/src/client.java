@@ -1,17 +1,19 @@
-
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.rmi.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Scanner;
 import java.util.Vector;
+import drrs.*;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
 
+//import HelloApp.Hello;
+//import HelloApp.HelloHelper;
+
+import org.omg.CORBA.*;
+
+/*
 class adminClient extends Thread
 {
 	private String clientTypeID = null;
@@ -174,5 +176,67 @@ class adminClient extends Thread
 		}
 		
 		return rpcObj;
+	}
+}
+*/
+public class client
+{
+	static drrsCorba drrsImpl;
+	
+	public static void main(String args[])
+	{
+		try
+		{
+		    // create and initialize the ORB
+			ORB orb = ORB.init(args, null);
+			// get the root naming context
+			org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+			// Use NamingContextExt instead of NamingContext. This is part of the Interoperable naming        	Service.  
+			NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+			
+			/* Find Servers */
+			String name = "DVL";
+			drrsImpl = drrsCorbaHelper.narrow(ncRef.resolve_str(name));
+			
+			
+			System.out.println("Obtained a handle on server object: " + drrsImpl);
+			//System.out.println(drrsImpl.sayHello("VAIBHAV"));
+			String a[] = {"12:30 - 14:30", "15:30 - 17:30"};
+			
+			StringHolder outputRt = new StringHolder();
+			IntHolder rt = new IntHolder(99);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			System.out.println(rt.value);
+			
+			drrsImpl.deleteRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			System.out.println(rt.value);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			System.out.println(rt.value);
+
+			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt);
+			System.out.println(outputRt.value);
+			
+			drrsImpl.cancelBooking("DVLS1234", outputRt.value, rt);
+			System.out.println(rt.value);
+			
+			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			
+			Scanner in = new Scanner(System.in);
+			String abd = in.next();
+			
+			drrsImpl.shutdown();
+		} 
+		catch (Exception e) 
+		{
+			System.out.println("ERROR : " + e) ;
+			e.printStackTrace(System.out);
+		}
+
 	}
 }

@@ -12,17 +12,22 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.rmi.*;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import drrs.*;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+
 
 /* This class contains code to create a UDP listen thread for each server.
  */
@@ -42,7 +47,7 @@ class listenThread extends Thread
 		bookingRecords = inBookingRecords;
 		start();
 	}
-	
+
 	public void run()
 	{
 		DatagramSocket serverSocket = null;
@@ -55,7 +60,7 @@ class listenThread extends Thread
              {
 	        	serverSocket = new DatagramSocket(serverPort);
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                //System.out.printf("\nListening on port %d\n", serverPort);
+                System.out.printf("\nListening on port %d\n", serverPort);
                 serverSocket.receive(receivePacket);
                 
                 String request = new String( receivePacket.getData());
@@ -104,7 +109,7 @@ class listenThread extends Thread
 }
 
 
-public class rmirpc extends UnicastRemoteObject implements rmiinterface{
+class rmirpcImpl extends drrsCorbaPOA {
 	public static final String MSG = "Hello World";
 	private static final long serialVersionUID = 1L;
 	
@@ -122,8 +127,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	//private Map<Integer, List<String>> RoomTimeSlots = new HashMap<Integer, List<String>>(10,10);
 	
 	/* Date(String) as key, hashmap RoomTimeSlots as value */
-	private Map<String, HashMap<Integer, List<String>>> DateRoomSlots = 
-			new HashMap<String, HashMap<Integer, List<String>>>(10, 10);
+	private Map<String, HashMap<Integer, ArrayList<String>>> DateRoomSlots = 
+			new HashMap<String, HashMap<Integer, ArrayList<String>>>(10, 10);
 	
 	private HashMap<String, String> bookingAvailRecords = new HashMap<String, String>(10, 10);
 	
@@ -134,16 +139,19 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	/* Log File Output */
 	private FileOutputStream userLog = null;
 	
-	protected rmirpc(String inServerName, Integer udpPort, central inCenRepoObj) throws RemoteException {
-		super(0);
+	private ORB orb;
+	
+	//protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
+	protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
+	{
 		serverName = inServerName;
 		cenRepoObj = inCenRepoObj;
 		udpListenThread = new listenThread(udpPort, bookingAvailRecords);
 	}
 	
-	/* Interface Message Implementation */
-	public String getMsg() {
-		return MSG;
+	public void setORB(ORB orb_val) 
+	{
+		orb = orb_val; 
 	}
 	
 	/* Generic */
@@ -159,15 +167,19 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 	 * -1 Failure
 	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
 	 */
-	public Integer createRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	@Override
+	public void createRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
 	{
-		Integer rt = new Integer(0);
+		rt.value = 0;
+		//Integer rt = new Integer(0);
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(adminId);
 		fileName = fileName.concat(".txt");
 		File logFile = new File(fileName);
 		PrintWriter out = null;
+		//ArrayList<String> listOfTimeSlots = (ArrayList<String>) Arrays.asList(inListOfTimeSlots);
+		ArrayList<String> listOfTimeSlots = new ArrayList<String>( Arrays.asList(inListOfTimeSlots));
 		
 		try
 		{
@@ -200,7 +212,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				if(validateAdminId(adminId) == -1)
 				{
 					out.printf("\nRequest Failed\n Server Response: -1");
-					return -1;
+					rt.value = -1;
+					return;
 				}
 			}
 			synchronized(DateRoomSlots)
@@ -214,8 +227,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 						{
 							for(int j=0; j<listOfTimeSlots.size(); j++)
 							{
-								rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
-								if(rt == -1)
+								rt.value = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+								if(rt.value == -1)
 								{
 									//System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
 									listOfTimeSlots.remove(j);
@@ -240,7 +253,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				}
 				else
 				{
-					HashMap<Integer, List<String>> tmp = new HashMap<Integer, List<String>>(10,10);
+					HashMap<Integer, ArrayList<String>> tmp = new HashMap<Integer, ArrayList<String>>(10,10);
 					tmp.put(roomNumber, listOfTimeSlots);
 					DateRoomSlots.put(date, tmp);
 					synchronized(this)
@@ -251,11 +264,11 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			}
 		
 			System.out.printf("\nTimeslot Addition Procedure Completed");
-			rt = 1;
+			rt.value = 1;
 			bookingAvailRecords = updateBookingAvailRecord();
 			synchronized(this)
 			{
-				out.printf("\nRequest Completed for Non Conflicted Timeslots\nServer Response %d", rt);
+				out.printf("\nRequest Completed for Non Conflicted Timeslots\nServer Response %d", rt.value);
 				out.close();
 			}
 		} 
@@ -263,11 +276,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		{
 			e.printStackTrace();
 		} 
-		catch (IOException e1) 
-		{
-			e1.printStackTrace();
-		}
-		return rt;
+		return;
 	}
 	
 	private Integer checkIfConflict(String timeOne, String timeTwo)
@@ -337,11 +346,14 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		return (date + "#" + Integer.toString(roomNumber) + "#" + timeSlot);
 	}
 	
-	public Integer deleteRoom(String adminId, Integer roomNumber, String date, List<String> listOfTimeSlots) 
+	@Override
+	public void deleteRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
 	{
-		Integer rt = new Integer(0);
+		rt.value = 0;
+		//Integer rt = new Integer(0);
 		String bookingName = null;
 		String studentId = null;
+		List<String> listOfTimeSlots = Arrays.asList(inListOfTimeSlots);
 		
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
@@ -378,7 +390,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			if(validateAdminId(adminId) == -1)
 			{
 				out.printf("\nRequest Failed\n Server Response: -1");
-				return -1;
+				rt.value = -1;
+				return;
 			}
 			
 			if(DateRoomSlots.containsKey(date))
@@ -402,7 +415,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 					    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
 					    	}
 				    	}
-						tmp.remove(tmpTimeSlot);
+				    	((DateRoomSlots.get(date)).get(roomNumber)).remove(tmpTimeSlot);
 					}
 				    
 				    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
@@ -422,17 +435,19 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				{
 					System.out.println("No record could be found matching input details");
 					out.printf("\nRequest Failed");
-					rt = -1;
+					rt.value = -1;
+					return;
 				}
 			}
 			else
 			{
 				System.out.println("No record could be found matching input details");
 				out.printf("\nRequest Failed");
-				rt = -1;
+				rt.value = -1;
+				return;
 			}
 			bookingAvailRecords = updateBookingAvailRecord();
-			out.printf("\nServer Response: %d", rt);
+			out.printf("\nServer Response: %d", rt.value);
 			out.close();
 		} 
 		catch (IOException e) 
@@ -440,14 +455,15 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return rt;
+		return;
 	}
 	
 	/* Student */
-	public String bookRoom(String studentId, Integer roomNumber, String date, String timeSlot) 
+	@Override
+	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt)
 	{
-		String rt = null;
-	
+		//String rt = null;
+		rt.value = null;
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(studentId);
@@ -478,7 +494,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				{
 					out.printf("\nRequest Failed");
 					out.printf("\nServer Response: null");
-					return null;
+					rt.value = null;
+					return;
 				}
 			}	
 			synchronized(DateRoomSlots)
@@ -493,7 +510,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 							if(BookingInfo.containsKey(tmpBookingKey))
 							{
 								System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-								rt = null;
+								rt.value = null;
 								synchronized(this)
 								{
 									out.printf("\nRequest Failed");
@@ -511,7 +528,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 											out.printf("\nRequest Failed");
 											out.printf("\nServer Response: null");
 										}
-										return null;
+										rt.value = null;
+										return;
 									}
 									
 									StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
@@ -530,9 +548,9 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 										out.printf("\nRequest Success");
 									}
 								}
-								rt = genBookingId(studentId, BookingCounter);
+								rt.value = genBookingId(studentId, BookingCounter);
 								BookingCounter = 1;
-								BookingInfo.put(tmpBookingKey, rt);
+								BookingInfo.put(tmpBookingKey, rt.value);
 								System.out.println("Booking Procedure Successfully Completed");
 							}
 						}
@@ -541,7 +559,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			}
 			synchronized(this)
 			{
-				out.printf("\nServer Response: %s", rt);
+				out.printf("\nServer Response: %s", rt.value);
 				out.close();
 			}
 		} 
@@ -552,10 +570,16 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		}
 		
 		bookingAvailRecords = updateBookingAvailRecord();
-		return rt;
+		return;
 	}
 	
-	public String getAvailableTimeSlot(String studentId, String date) 
+	private void roomBookerFun()
+	{
+		
+	}
+	
+	@Override
+	public void getAvailableTimeSlot(String studentId, String date, StringHolder outputRt) 
 	{
 		String recordOne = null;
 		String recordTwo = null;
@@ -580,7 +604,9 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				if(validateStudentId(studentId) == -1)
 				{
 					out.println("\nRequest Failed\nServer Response: null");
-					return null;
+					outputRt.value = "NULL";
+					return;
+					// vj return null;
 				}
 				
 				if(serverName == "DVL")
@@ -627,11 +653,11 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		return rt;
+		outputRt.value = rt;
+		//return rt;
 	}
 	
-	private String getAvailableRecordFromServer(String inUrl, Integer inUdpPort, String request)
+	private String getAvailableRecordFromServer(drrsCorba inUrl, Integer inUdpPort, String request)
 	{
 		String record = null;
 		DatagramSocket clientSocket = null;
@@ -647,7 +673,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    //System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
+		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
@@ -696,11 +722,12 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		
 		return record;
 	}
-	
-	public Integer cancelBooking(String studentId, String bookingID) 
-	{
-		Integer rt = new Integer(0);
 
+	@Override
+	public void cancelBooking(String studentId, String bookingID, IntHolder rt)
+	{
+		//Integer rt = new Integer(0);
+		rt.value = 0;
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(studentId);
@@ -731,7 +758,8 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				if(validateStudentId(studentId) == -1)
 				{
 					out.printf("\nRequest Failed\nServer Response: null");
-					return -1;
+					rt.value = -1;
+					return;
 				}
 			}
 			synchronized (BookingInfo) 
@@ -753,7 +781,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 					}
 					else
 					{
-						rt = -1;
+						rt.value = -1;
 						synchronized(out)
 						{
 							out.printf("\nRequest Failed");
@@ -763,7 +791,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 				}
 				else
 				{
-					rt = -1;
+					rt.value = -1;
 					synchronized(out)
 					{
 						out.printf("\nRequest Failed");
@@ -773,7 +801,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			}
 			synchronized(out)
 			{
-				out.printf("\nServer Response: %d", rt);
+				out.printf("\nServer Response: %d", rt.value);
 				out.close();
 			}
 		} 
@@ -783,7 +811,7 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 			e.printStackTrace();
 		}
 		bookingAvailRecords = updateBookingAvailRecord();
-		return rt;
+		return;
 	}
 	
 	private HashMap<String, String> updateBookingAvailRecord()
@@ -916,5 +944,91 @@ public class rmirpc extends UnicastRemoteObject implements rmiinterface{
 		}
 		
 		return 0;
+	}
+
+	@Override
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
+}
+
+public class rmirpc
+{
+	public static void main(String args[])
+	{
+		rmirpc objServerStarter = new rmirpc();
+		
+		objServerStarter.createServer(args);
+		
+	}
+	
+	void createServer(String args[])
+	{
+		try
+		{
+			// create and initialize the ORB
+		    ORB orb = ORB.init(args, null);
+		    // get reference to rootpoa & activate the POAManager
+		    POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+		    rootpoa.the_POAManager().activate();
+		    // create servant and register it with the ORB
+		    central objCentral = new central();
+		    
+		    rmirpcImpl objRmirpcImplDVL = new rmirpcImpl("DVL", 9852, objCentral);
+		    rmirpcImpl objRmirpcImplKKL = new rmirpcImpl("KKL", 9752, objCentral);
+		    rmirpcImpl objRmirpcImplWST = new rmirpcImpl("WST", 9652, objCentral);
+		    //rmirpcImpl objRmirpcImpl = new rmirpcImpl(serverName, serverPort, objCentral);
+		    
+		    objRmirpcImplDVL.setORB(orb);
+		    objRmirpcImplKKL.setORB(orb);
+		    objRmirpcImplWST.setORB(orb);
+
+		    // get object reference from the servant
+		    org.omg.CORBA.Object refDVL = rootpoa.servant_to_reference(objRmirpcImplDVL);
+		    org.omg.CORBA.Object refKKL = rootpoa.servant_to_reference(objRmirpcImplKKL);
+		    org.omg.CORBA.Object refWST = rootpoa.servant_to_reference(objRmirpcImplWST);
+		    
+		    drrsCorba hrefDVL = drrsCorbaHelper.narrow(refDVL);
+		    drrsCorba hrefKKL = drrsCorbaHelper.narrow(refKKL);
+		    drrsCorba hrefWST = drrsCorbaHelper.narrow(refWST);
+		    
+		    // get the root naming context
+		    // NameService invokes the name service
+		    org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+		    // Use NamingContextExt which is part of the Interoperable Naming Service (INS) specification.
+		    NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+		    
+		    // bind the Object Reference in Naming
+		    NameComponent pathDVL[] = ncRef.to_name( "DVL" );
+		    NameComponent pathKKL[] = ncRef.to_name( "KKL" );
+		    NameComponent pathWST[] = ncRef.to_name( "WST" );
+		    /* href contains the path server location */
+		    ncRef.rebind(pathDVL, hrefDVL);
+		    ncRef.rebind(pathKKL, hrefKKL);
+		    ncRef.rebind(pathWST, hrefWST);
+		    
+		    System.out.println(hrefDVL);
+		    System.out.println(hrefKKL);
+		    System.out.println(hrefWST);
+		    
+		    objCentral.setDVLServer(hrefDVL);
+		    objCentral.setKKLServer(hrefKKL);
+		    objCentral.setWSTServer(hrefWST);
+		    objCentral.setUdpPortDVL(9852);
+		    objCentral.setUdpPortKKL(9752);
+		    objCentral.setUdpPortWST(9652);
+		    
+		    System.out.println("Servers are ready and waiting ...");
+		    // wait for invocations from clients
+		    orb.run();
+		}
+		catch(Exception e)
+		{
+			System.err.println("ERROR: " + e);
+			e.printStackTrace();
+		}
+		
+		System.out.println("Servers Exiting ...");
 	}
 }
