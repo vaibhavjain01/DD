@@ -182,6 +182,8 @@ class adminClient extends Thread
 public class client
 {
 	static drrsCorba drrsImpl;
+	static drrsCorba drrsImplKKL;
+	static drrsCorba drrsImplWST;
 	
 	public static void main(String args[])
 	{
@@ -198,6 +200,11 @@ public class client
 			String name = "DVL";
 			drrsImpl = drrsCorbaHelper.narrow(ncRef.resolve_str(name));
 			
+			String nameKKL = "KKL";
+			drrsImplKKL = drrsCorbaHelper.narrow(ncRef.resolve_str(nameKKL));
+			
+			String nameWST = "WST";
+			drrsImplWST = drrsCorbaHelper.narrow(ncRef.resolve_str(nameWST));
 			
 			System.out.println("Obtained a handle on server object: " + drrsImpl);
 			//System.out.println(drrsImpl.sayHello("VAIBHAV"));
@@ -208,6 +215,9 @@ public class client
 			
 			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", a, rt);
 			System.out.println(rt.value);
+			drrsImplKKL.createRoom("KKLA1213", 109, "23-10-1990", a, rt);
+			System.out.println(rt.value);
+			
 			
 			drrsImpl.deleteRoom("DVLA1213", 109, "23-10-1990", a, rt);
 			System.out.println(rt.value);
@@ -218,11 +228,35 @@ public class client
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			
+			drrsImpl.bookRoom("KKLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt);
+			System.out.println(outputRt.value);
+			String bookingId = outputRt.value;
+			Thread.sleep(3000);
+			
+			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			Thread.sleep(3000);
+			
+			drrsImpl.cancelBooking("KKLS1234", bookingId, rt);
+			System.out.println(rt.value);
+			Thread.sleep(3000);
+		
+			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			Thread.sleep(3000);
+			
 			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt);
 			System.out.println(outputRt.value);
+			bookingId = outputRt.value;
+			Thread.sleep(3000);
+		
+			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			Thread.sleep(3000);
 			
-			drrsImpl.cancelBooking("DVLS1234", outputRt.value, rt);
+			drrsImpl.cancelBooking("DVLS1234", bookingId, rt);
 			System.out.println(rt.value);
+			Thread.sleep(3000);
 			
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);

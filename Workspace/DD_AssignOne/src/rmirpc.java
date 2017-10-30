@@ -69,6 +69,7 @@ class listenThread extends Thread
                 	System.out.println("Unauthenticated Request Discarded");
                 	continue;
                 }
+                
                 //System.out.println("RECEIVED: " + request);
                 InetAddress IPAddress = receivePacket.getAddress();
                 int port = receivePacket.getPort();
@@ -141,12 +142,15 @@ class rmirpcImpl extends drrsCorbaPOA {
 	
 	private ORB orb;
 	
+	private PrintWriter out;
+	
 	//protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
 	protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
 	{
 		serverName = inServerName;
 		cenRepoObj = inCenRepoObj;
 		udpListenThread = new listenThread(udpPort, bookingAvailRecords);
+		listenToUDP.start();
 	}
 	
 	public void setORB(ORB orb_val) 
@@ -159,6 +163,94 @@ class rmirpcImpl extends drrsCorbaPOA {
 	{
 		return (studentId + "_" + bookingCounter.toString());
 	}
+	
+	Thread listenToUDP = new Thread()
+	{
+	  public void run() 
+	  {
+		  DatagramSocket serverSocket = null;
+		  String response = null;
+			try
+			{
+		         byte[] receiveData = new byte[1024];
+		         byte[] sendData = new byte[1024];
+		         Integer serverPort = 0;
+		         
+		         if(serverName == "DVL")
+		         {
+		        	 serverPort = 9853;
+		         }
+		         else if(serverName == "KKL")
+		         {
+		        	 serverPort = 9753;
+		         }
+		         else if(serverName == "WST")
+		         {
+		        	 serverPort = 9653;
+		         }
+		         
+		         while(true)
+	             {
+		        	serverSocket = new DatagramSocket(serverPort);
+	                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+	                System.out.printf("\nListening on port %d\n", serverPort);
+	                serverSocket.receive(receivePacket);
+	                
+	                String request = new String( receivePacket.getData());
+	                if((request.contains("ROOMBOOK") == false) &&
+	                		(request.contains("ROOMCANCEL") == false))
+	                {
+	                	System.out.println("Unauthenticated Request Discarded");
+	                	continue;
+	                }
+	                
+	                //System.out.println("RECEIVED: " + request);
+	                InetAddress IPAddress = receivePacket.getAddress();
+	                int port = receivePacket.getPort();     
+	                if(request.contains("ROOMBOOK") == true)
+	                {
+	                	String params[] = request.split(",");
+	                	response = roomBookerFun(params[1], Integer.parseInt(params[2]), params[3], params[4].substring(0, 13));
+	                }
+	                else if(request.contains("ROOMCANCEL") == true)
+	                {
+	                	String params[] = request.split(",");
+	                	Integer tmpRt = (bookingCanceller(params[1], params[2]));
+	                	response = tmpRt.toString();
+	                }
+	                 
+	                if(response != null)
+	                {
+	                	sendData = response.getBytes();
+	                }
+	                else
+	                {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();
+	                
+	             }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+	  }
+	};
 	
 	/* Admin */
 	/* Function to create room
@@ -497,64 +589,57 @@ class rmirpcImpl extends drrsCorbaPOA {
 					rt.value = null;
 					return;
 				}
-			}	
-			synchronized(DateRoomSlots)
+			}
+
+			if((serverName == "DVL") && (((studentId.substring(0, 4)).equals("DVLS")) == false))
 			{
-				if(DateRoomSlots.containsKey(date))
+				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
 				{
-					if((DateRoomSlots.get(date)).containsKey(roomNumber))
-					{
-						if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
-						{
-							String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
-							if(BookingInfo.containsKey(tmpBookingKey))
-							{
-								System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-								rt.value = null;
-								synchronized(this)
-								{
-									out.printf("\nRequest Failed");
-								}
-							}
-							else
-							{
-								if(StudentRecord.containsKey(studentId))
-								{
-									if(StudentRecord.get(studentId) == 3)
-									{
-										System.out.println("Maximum Booking Count Reached for this Student ID");
-										synchronized(this)										
-										{
-											out.printf("\nRequest Failed");
-											out.printf("\nServer Response: null");
-										}
-										rt.value = null;
-										return;
-									}
-									
-									StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
-									BookingCounter = StudentRecord.get(studentId);
-									synchronized(this)
-									{
-										out.printf("\nRequest Success");
-									}
-								}
-								else
-								{
-									BookingCounter = 1;
-									StudentRecord.put(studentId, 1);
-									synchronized(this)
-									{
-										out.printf("\nRequest Success");
-									}
-								}
-								rt.value = genBookingId(studentId, BookingCounter);
-								BookingCounter = 1;
-								BookingInfo.put(tmpBookingKey, rt.value);
-								System.out.println("Booking Procedure Successfully Completed");
-							}
-						}
-					}
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				{
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					this.out = out;
+				}
+			}
+			else if((serverName == "KKL") && (((studentId.substring(0, 4)).equals("KKLS")) == false))
+			{
+				if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				{
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				{
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					this.out = out;
+				}
+			}
+			else if((serverName == "WST") && (((studentId.substring(0, 4)).equals("WSTS")) == false))
+			{
+				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				{
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				{
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					this.out = out;
+				}
+			}
+			else
+			{
+				rt.value = roomBookerFun(studentId, roomNumber, date, timeSlot);
+				if(rt.value == null)
+				{
+					out.printf("\nRequest Failed");
+				}
+				else
+				{
+					out.printf("\nRequest Success");
 				}
 			}
 			synchronized(this)
@@ -568,14 +653,124 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		bookingAvailRecords = updateBookingAvailRecord();
 		return;
 	}
 	
-	private void roomBookerFun()
+	private String roomBookForwarder(String studentId, Integer roomNumber, String date, String timeSlot, Integer inUdpPort)
 	{
+		String rt = null;
 		
+		DatagramSocket clientSocket = null;
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		inUdpPort++;
+		try
+		{
+			clientSocket = new DatagramSocket();
+		    InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
+		    byte[] sendData = new byte[1024];
+		    byte[] receiveData = new byte[1024];
+		    int i = 0;
+		    String request = "ROOMBOOK," + studentId + "," + roomNumber.toString() + "," + date + "," + timeSlot;
+		    
+		    String sentence = request;
+		    sendData = sentence.getBytes();
+		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
+		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
+		    clientSocket.send(sendPacket);
+		    
+		    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		    clientSocket.receive(receivePacket);
+		    if(receiveData[0] == 0)
+		    {
+		    	return null;
+		    }
+		    for(i = 0; i < receiveData.length; i++)
+		    {
+		    	if(receiveData[i] == 0)
+		    	{
+		    		break;
+		    	}
+		    }
+		    receiveData.toString();
+		    String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+		    
+		    //System.out.println("FROM SERVER:" + response);
+		    rt = response;
+		}
+		catch(SocketException e)
+		{
+			e.printStackTrace();
+		}
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		catch(NegativeArraySizeException e)
+		{
+			// Handled
+		}
+		finally
+		{
+			if(clientSocket != null)
+			{
+				clientSocket.close();
+			}
+		}
+		
+		return rt;
+	}
+	
+	private String roomBookerFun(String studentId, int roomNumber, String date, String timeSlot)
+	{
+		StringHolder rt = new StringHolder(null);
+		
+		synchronized(DateRoomSlots)
+		{
+			if(DateRoomSlots.containsKey(date))
+			{
+				if((DateRoomSlots.get(date)).containsKey(roomNumber))
+				{
+					if((DateRoomSlots.get(date)).get(roomNumber).contains(timeSlot))
+					{
+						String tmpBookingKey = genBookingInfoKey(date, roomNumber, timeSlot);
+						if(BookingInfo.containsKey(tmpBookingKey))
+						{
+							System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
+							rt.value = null;
+						}
+						else
+						{
+							if(StudentRecord.containsKey(studentId))
+							{
+								if(StudentRecord.get(studentId) == 3)
+								{
+									System.out.println("Maximum Booking Count Reached for this Student ID");
+									return null;
+								}
+								
+								StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+								BookingCounter = StudentRecord.get(studentId);
+							}
+							else
+							{
+								BookingCounter = 1;
+								StudentRecord.put(studentId, 1);
+							}
+							rt.value = genBookingId(studentId, BookingCounter);
+							BookingCounter = 1;
+							BookingInfo.put(tmpBookingKey, rt.value);
+							System.out.println("Booking Procedure Successfully Completed");
+							bookingAvailRecords = updateBookingAvailRecord();
+						}
+					}
+				}
+			}
+		}
+		return rt.value;
 	}
 	
 	@Override
@@ -762,41 +957,56 @@ class rmirpcImpl extends drrsCorbaPOA {
 					return;
 				}
 			}
-			synchronized (BookingInfo) 
+			
+			if((serverName == "DVL") && (((studentId.substring(0, 4)).equals("DVLS")) == false))
 			{
-				if(BookingInfo.containsValue(bookingID))
+				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
 				{
-					if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
-					{
-						BookingInfo.values().remove(bookingID);
-						synchronized (StudentRecord)
-						{
-							StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
-						}
-						synchronized(out)
-						{
-							out.printf("\nRequest Success");
-						}
-						System.out.println("Booking Successfully Deleted");
-					}
-					else
-					{
-						rt.value = -1;
-						synchronized(out)
-						{
-							out.printf("\nRequest Failed");
-						}
-						System.out.println("A student can only delete his own bookings");
-					}
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				{
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					this.out = out;
+				}
+			}
+			else if((serverName == "KKL") && (((studentId.substring(0, 4)).equals("KKLS")) == false))
+			{
+				if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				{
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				{
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					this.out = out;
+				}
+			}
+			else if((serverName == "WST") && (((studentId.substring(0, 4)).equals("WSTS")) == false))
+			{
+				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				{
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					this.out = out;
+				}
+				else if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				{
+					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					this.out = out;
+				}
+			}
+			else
+			{
+				rt.value = bookingCanceller(studentId, bookingID);
+				if(rt.value == 0)
+				{
+					out.printf("Request Success");
 				}
 				else
 				{
-					rt.value = -1;
-					synchronized(out)
-					{
-						out.printf("\nRequest Failed");
-					}
-					System.out.println("No such booking record with provided bookingID was found");
+					out.printf("Request Failed");
 				}
 			}
 			synchronized(out)
@@ -810,8 +1020,112 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		bookingAvailRecords = updateBookingAvailRecord();
 		return;
+	}
+	
+	private Integer roomCancelForwarder(String studentId, String bookingId, Integer inUdpPort)
+	{
+		Integer rt = null;
+		
+		DatagramSocket clientSocket = null;
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		
+		try
+		{
+			clientSocket = new DatagramSocket();
+		    InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
+		    byte[] sendData = new byte[1024];
+		    byte[] receiveData = new byte[1024];
+		    int i = 0;
+		    String request = "ROOMCANCEL," + studentId + "," + bookingId;
+		    
+		    String sentence = request;
+		    sendData = sentence.getBytes();
+		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort + 1);
+		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort + 1);
+		    clientSocket.send(sendPacket);
+		    
+		    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		    clientSocket.receive(receivePacket);
+		    if(receiveData[0] == 0)
+		    {
+		    	return null;
+		    }
+		    for(i = 0; i < receiveData.length; i++)
+		    {
+		    	if(receiveData[i] == 0)
+		    	{
+		    		break;
+		    	}
+		    }
+		    receiveData.toString();
+		    String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+		    
+		    //System.out.println("FROM SERVER:" + response);
+		    rt = Integer.parseInt(response);
+		}
+		catch(SocketException e)
+		{
+			e.printStackTrace();
+		}
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		catch(NegativeArraySizeException e)
+		{
+			// Handled
+		}
+		finally
+		{
+			if(clientSocket != null)
+			{
+				clientSocket.close();
+			}
+		}
+		
+		return rt;
+	}
+	
+	private int bookingCanceller(String studentId, String bookingID)
+	{
+		IntHolder rt = new IntHolder(0);
+		
+		if(bookingID.length() > 10)
+		{
+			bookingID = bookingID.substring(0, 10);
+		}
+		synchronized (BookingInfo) 
+		{
+			if(BookingInfo.containsValue(bookingID))
+			{
+				if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
+				{
+					BookingInfo.values().remove(bookingID);
+					synchronized (StudentRecord)
+					{
+						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+					}
+					System.out.println("Booking Successfully Deleted");
+					bookingAvailRecords = updateBookingAvailRecord();
+				}
+				else
+				{
+					rt.value = -1;
+					System.out.println("A student can only delete his own bookings");
+				}
+			}
+			else
+			{
+				rt.value = -1;
+				System.out.println("No such booking record with provided bookingID was found");
+			}
+		}
+		return rt.value;
 	}
 	
 	private HashMap<String, String> updateBookingAvailRecord()
@@ -911,26 +1225,11 @@ class rmirpcImpl extends drrsCorbaPOA {
 			return -1;
 		}
 		
-		if(serverName == "DVL")
+		if( (((studentId.substring(0, 4)).equals("DVLS")) == false) &&
+				(((studentId.substring(0, 4)).equals("KKLS")) == false) &&
+				(((studentId.substring(0, 4)).equals("WSTS")) == false))
 		{
-			if(((studentId.substring(0, 4)).equals("DVLS")) == false)
-			{
-				return -1;
-			}
-		}
-		else if(serverName == "KKL")
-		{
-			if(((studentId.substring(0, 4)).equals("KKLS")) == false)
-			{
-				return -1;
-			}
-		}
-		else if(serverName == "WST")
-		{
-			if(((studentId.substring(0, 4)).equals("WSTS")) == false)
-			{
-				return -1;
-			}
+			return -1;
 		}
 		
 		try
