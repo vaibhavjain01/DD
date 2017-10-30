@@ -228,7 +228,7 @@ public class client
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			
-			drrsImpl.bookRoom("KKLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt);
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
 			System.out.println(outputRt.value);
 			String bookingId = outputRt.value;
 			Thread.sleep(3000);
@@ -237,7 +237,7 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.cancelBooking("KKLS1234", bookingId, rt);
+			drrsImpl.cancelBooking("DVLS1234", bookingId, rt);
 			System.out.println(rt.value);
 			Thread.sleep(3000);
 		
@@ -245,7 +245,7 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt);
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "DVL");
 			System.out.println(outputRt.value);
 			bookingId = outputRt.value;
 			Thread.sleep(3000);
@@ -254,9 +254,13 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.cancelBooking("DVLS1234", bookingId, rt);
-			System.out.println(rt.value);
+			drrsImpl.changeReservation("DVLS1234", bookingId, "KKL", 109, "23-10-1990", "12:30 - 14:30", outputRt);
+			System.out.println(outputRt.value);
 			Thread.sleep(3000);
+			
+			//drrsImpl.cancelBooking("DVLS1234", bookingId, rt);
+			//System.out.println(rt.value);
+			//Thread.sleep(3000);
 			
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);

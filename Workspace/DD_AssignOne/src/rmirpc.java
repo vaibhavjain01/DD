@@ -159,9 +159,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 	
 	/* Generic */
-	private String genBookingId(String studentId, Integer bookingCounter)
+	private String genBookingId(String studentId, Integer bookingCounter, String serverName)
 	{
-		return (studentId + "_" + bookingCounter.toString());
+		return (studentId + "_" + bookingCounter.toString() + "_" + serverName);
 	}
 	
 	Thread listenToUDP = new Thread()
@@ -552,7 +552,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 	
 	/* Student */
 	@Override
-	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt)
+	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt, String campusName)
 	{
 		//String rt = null;
 		rt.value = null;
@@ -591,40 +591,40 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 			}
 
-			if((serverName == "DVL") && (((studentId.substring(0, 4)).equals("DVLS")) == false))
+			if((serverName == "DVL") && (((campusName).equals("DVL")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				if(((campusName).equals("KKL")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				else if(((campusName).equals("WST")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "KKL") && (((studentId.substring(0, 4)).equals("KKLS")) == false))
+			else if((serverName == "KKL") && (((campusName).equals("KKL")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				if(((campusName).equals("DVL")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				else if(((campusName).equals("WST")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "WST") && (((studentId.substring(0, 4)).equals("WSTS")) == false))
+			else if((serverName == "WST") && (((campusName).equals("WST")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				if(((campusName).equals("KKL")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				else if(((campusName).equals("DVL")) == true)
 				{
 					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
 					this.out = out;
@@ -760,7 +760,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 								BookingCounter = 1;
 								StudentRecord.put(studentId, 1);
 							}
-							rt.value = genBookingId(studentId, BookingCounter);
+							rt.value = genBookingId(studentId, BookingCounter, this.serverName);
 							BookingCounter = 1;
 							BookingInfo.put(tmpBookingKey, rt.value);
 							System.out.println("Booking Procedure Successfully Completed");
@@ -958,40 +958,40 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 			}
 			
-			if((serverName == "DVL") && (((studentId.substring(0, 4)).equals("DVLS")) == false))
+			if((serverName == "DVL") && (((bookingID.substring(11, 14)).equals("DVL")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				if(((bookingID.substring(11, 14)).equals("KKL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				else if(((bookingID.substring(11, 14)).equals("WST")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "KKL") && (((studentId.substring(0, 4)).equals("KKLS")) == false))
+			else if((serverName == "KKL") && (((bookingID.substring(11, 14)).equals("KKL")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				if(((bookingID.substring(11, 14)).equals("DVL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("WSTS")) == true)
+				else if(((bookingID.substring(11, 14)).equals("WST")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "WST") && (((studentId.substring(0, 4)).equals("WSTS")) == false))
+			else if((serverName == "WST") && (((bookingID.substring(11, 14)).equals("WST")) == false))
 			{
-				if(((studentId.substring(0, 4)).equals("KKLS")) == true)
+				if(((bookingID.substring(11, 14)).equals("KKL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((studentId.substring(0, 4)).equals("DVLS")) == true)
+				else if(((bookingID.substring(11, 14)).equals("DVL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
@@ -1095,9 +1095,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 	{
 		IntHolder rt = new IntHolder(0);
 		
-		if(bookingID.length() > 10)
+		if(bookingID.length() > 14)
 		{
-			bookingID = bookingID.substring(0, 10);
+			bookingID = bookingID.substring(0, 14);
 		}
 		synchronized (BookingInfo) 
 		{
@@ -1224,10 +1224,16 @@ class rmirpcImpl extends drrsCorbaPOA {
 		{
 			return -1;
 		}
-		
-		if( (((studentId.substring(0, 4)).equals("DVLS")) == false) &&
-				(((studentId.substring(0, 4)).equals("KKLS")) == false) &&
-				(((studentId.substring(0, 4)).equals("WSTS")) == false))
+
+		if((serverName == "DVL") && (((studentId.substring(0, 4)).equals("DVLS")) == false))
+		{
+			return -1;
+		}
+		else if((serverName == "KKL") && (((studentId.substring(0, 4)).equals("KKLS")) == false))
+		{
+			return -1;
+		}
+		else if((serverName == "WST") && (((studentId.substring(0, 4)).equals("WSTS")) == false))
 		{
 			return -1;
 		}
@@ -1249,6 +1255,132 @@ class rmirpcImpl extends drrsCorbaPOA {
 	public void shutdown() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void changeReservation(String studentId, String bookingID, String newCampusName, 
+			int newRoomNumber, String newDate, String newTimeSlot, StringHolder outputRt) 
+	{
+		outputRt.value = null;
+		Integer rt = 0;
+		String fileName = "D:\\Test\\".concat(serverName);
+		fileName = fileName.concat("\\");
+		fileName = fileName.concat(studentId);
+		fileName = fileName.concat(".txt");
+		File logFile = new File(fileName);
+		PrintWriter out = null;
+		
+		try
+		{
+			if(logFile.exists() && !logFile.isDirectory())
+			{
+				synchronized(this)
+				{
+					out = new PrintWriter(new FileOutputStream(new File(fileName), true));
+				}
+			}
+			else
+			{
+				out = new PrintWriter(fileName);
+			}
+			
+			synchronized(out)
+			{
+			    out.printf("\n\nDate: %s\nTime: %s\nRequestType: CancelBooking"
+			    		+ "\nRequestParam: \n(studentId = %s)\n(bookingID = %s)", 
+			    		LocalDate.now(), LocalTime.now(), studentId, bookingID);
+				    
+				if(validateStudentId(studentId) == -1)
+				{
+					out.printf("\nRequest Failed\nServer Response: null");
+					outputRt.value = null;
+					return;
+				}
+			}
+			synchronized (this)
+			{
+				if(newCampusName.equals("DVL") == true)
+				{
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortDVL());
+				}
+				else if(newCampusName.equals("KKL") == true)
+				{
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortKKL());
+				}
+				else if(newCampusName.equals("WST") == true)
+				{
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
+				}
+				
+				if(outputRt.value == null)
+				{
+					outputRt.value = "FAILED";
+				}
+				
+				if((serverName == "DVL") && (((bookingID.substring(11, 14)).equals("DVL")) == false))
+				{
+					if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+						this.out = out;
+					}
+					else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+						this.out = out;
+					}
+				}
+				else if((serverName == "KKL") && (((bookingID.substring(11, 14)).equals("KKL")) == false))
+				{
+					if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+						this.out = out;
+					}
+					else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+						this.out = out;
+					}
+				}
+				else if((serverName == "WST") && (((bookingID.substring(11, 14)).equals("WST")) == false))
+				{
+					if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+						this.out = out;
+					}
+					else if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+					{
+						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+						this.out = out;
+					}
+				}
+				else
+				{
+					rt = bookingCanceller(studentId, bookingID);
+					if(rt == 0)
+					{
+						out.printf("Request Success");
+					}
+					else
+					{
+						out.printf("Request Failed");
+					}
+				}
+			}
+			synchronized(out)
+			{
+				out.printf("\nServer Response: %s", outputRt.value);
+				out.close();
+			}
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
 	}
 }
 
