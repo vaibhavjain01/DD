@@ -60,7 +60,7 @@ class listenThread extends Thread
              {
 	        	serverSocket = new DatagramSocket(serverPort);
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                System.out.printf("\nListening on port %d\n", serverPort);
+                //System.out.printf("\nListening on port %d\n", serverPort);
                 serverSocket.receive(receivePacket);
                 
                 String request = new String( receivePacket.getData());
@@ -151,6 +151,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		cenRepoObj = inCenRepoObj;
 		udpListenThread = new listenThread(udpPort, bookingAvailRecords);
 		listenToUDP.start();
+		resetCounter.start();
 	}
 	
 	public void setORB(ORB orb_val) 
@@ -159,10 +160,26 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 	
 	/* Generic */
-	private String genBookingId(String studentId, Integer bookingCounter, String serverName)
+	private String genBookingId(String studentId, String date, Integer roomNumber, String timeSlot, String serverName)
 	{
-		return (studentId + "_" + bookingCounter.toString() + "_" + serverName);
+		return (studentId + "_" + date + "_" + roomNumber.toString() + "_" + timeSlot + "_" + serverName);
 	}
+	
+	Thread resetCounter = new Thread()
+	{
+		public void run()
+		{
+			int counter = 1;
+			while(true)
+			{
+				if(counter == (1 * 60 * 60 * 24 * 7))	// 1 second * 60seconds * 60 minutes * 24 hours * 7 days
+				{
+					counter = 1;
+					StudentRecord.clear();
+				}
+			}
+		}
+	};
 	
 	Thread listenToUDP = new Thread()
 	{
@@ -193,7 +210,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 	             {
 		        	serverSocket = new DatagramSocket(serverPort);
 	                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-	                System.out.printf("\nListening on port %d\n", serverPort);
+	                //System.out.printf("\nListening on port %d\n", serverPort);
 	                serverSocket.receive(receivePacket);
 	                
 	                String request = new String( receivePacket.getData());
@@ -356,7 +373,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 			}
 		
 			System.out.printf("\nTimeslot Addition Procedure Completed");
-			rt.value = 1;
+			rt.value = 0;
 			bookingAvailRecords = updateBookingAvailRecord();
 			synchronized(this)
 			{
@@ -555,13 +572,16 @@ class rmirpcImpl extends drrsCorbaPOA {
 	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt, String campusName)
 	{
 		//String rt = null;
-		rt.value = null;
+		rt.value = "FAILED";
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(studentId);
 		fileName = fileName.concat(".txt");
 		File logFile = new File(fileName);
 		PrintWriter out = null;
+		
+		System.out.println("Room Book: New Booking Request Received");
+		System.out.println("Room Book: New booking: " + campusName + "_" + roomNumber + "_" + date + "_" + timeSlot);
 		
 		try
 		{
@@ -586,11 +606,21 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					out.printf("\nRequest Failed");
 					out.printf("\nServer Response: null");
-					rt.value = null;
+					rt.value = "FAILED";
 					return;
 				}
 			}
 
+			if(StudentRecord.containsKey(studentId))
+			{
+				if(StudentRecord.get(studentId) == 3)
+				{
+					System.out.println("Maximum Booking Count Reached for this Student ID");
+					rt.value = "FAILED";
+					return;
+				}
+			}
+			
 			if((serverName == "DVL") && (((campusName).equals("DVL")) == false))
 			{
 				if(((campusName).equals("KKL")) == true)
@@ -633,19 +663,31 @@ class rmirpcImpl extends drrsCorbaPOA {
 			else
 			{
 				rt.value = roomBookerFun(studentId, roomNumber, date, timeSlot);
-				if(rt.value == null)
-				{
-					out.printf("\nRequest Failed");
-				}
-				else
-				{
-					out.printf("\nRequest Success");
-				}
 			}
 			synchronized(this)
 			{
 				out.printf("\nServer Response: %s", rt.value);
 				out.close();
+				
+				if(rt.value != null)
+				{
+					if(StudentRecord.containsKey(studentId))
+					{
+						StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
+						BookingCounter = StudentRecord.get(studentId);
+					}
+					else
+					{
+						BookingCounter = 1;
+						StudentRecord.put(studentId, 1);
+					}
+					out.printf("\nRequest Success");
+				}
+				else
+				{
+					rt.value = "FAILED";
+					out.printf("\nRequest Failed");
+				}
 			}
 		} 
 		catch (IOException e) 
@@ -674,7 +716,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
+		    // System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
@@ -744,23 +786,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 						}
 						else
 						{
-							if(StudentRecord.containsKey(studentId))
-							{
-								if(StudentRecord.get(studentId) == 3)
-								{
-									System.out.println("Maximum Booking Count Reached for this Student ID");
-									return null;
-								}
-								
-								StudentRecord.put(studentId, StudentRecord.get(studentId) + 1);
-								BookingCounter = StudentRecord.get(studentId);
-							}
-							else
-							{
-								BookingCounter = 1;
-								StudentRecord.put(studentId, 1);
-							}
-							rt.value = genBookingId(studentId, BookingCounter, this.serverName);
+							rt.value = genBookingId(studentId, date, roomNumber, timeSlot, this.serverName);
 							BookingCounter = 1;
 							BookingInfo.put(tmpBookingKey, rt.value);
 							System.out.println("Booking Procedure Successfully Completed");
@@ -868,7 +894,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
+		    // System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
@@ -958,40 +984,46 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 			}
 			
-			if((serverName == "DVL") && (((bookingID.substring(11, 14)).equals("DVL")) == false))
+			if(bookingID.length() < 14)
 			{
-				if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+				rt.value = -1;
+				return;
+			}
+			
+			if((serverName == "DVL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == false))
+			{
+				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "KKL") && (((bookingID.substring(11, 14)).equals("KKL")) == false))
+			else if((serverName == "KKL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == false))
 			{
-				if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
-				else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
-			else if((serverName == "WST") && (((bookingID.substring(11, 14)).equals("WST")) == false))
+			else if((serverName == "WST") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == false))
 			{
-				if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
-				else if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
 					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
@@ -1000,19 +1032,24 @@ class rmirpcImpl extends drrsCorbaPOA {
 			else
 			{
 				rt.value = bookingCanceller(studentId, bookingID);
-				if(rt.value == 0)
-				{
-					out.printf("Request Success");
-				}
-				else
-				{
-					out.printf("Request Failed");
-				}
 			}
 			synchronized(out)
 			{
 				out.printf("\nServer Response: %d", rt.value);
 				out.close();
+				
+				synchronized (StudentRecord)
+				{
+					if(rt.value == 0)
+					{
+						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+						out.printf("Request Success");
+					}
+					else
+					{
+						out.printf("Request Failed");
+					}
+				}
 			}
 		} 
 		catch (IOException e) 
@@ -1041,7 +1078,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort + 1);
+		    // System.out.printf("\nSending on address %s, port %d\n", IPAddress, inUdpPort + 1);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort + 1);
 		    clientSocket.send(sendPacket);
 		    
@@ -1097,7 +1134,13 @@ class rmirpcImpl extends drrsCorbaPOA {
 		
 		if(bookingID.length() > 14)
 		{
-			bookingID = bookingID.substring(0, 14);
+			bookingID = bookingID.substring(0, 41);
+		}
+		else
+		{
+			rt.value = -1;
+			System.out.println("Incorrect Booking ID Received for Cancellation");
+			return rt.value;
 		}
 		synchronized (BookingInfo) 
 		{
@@ -1106,10 +1149,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(studentId.equals(bookingID.substring(0, bookingID.indexOf("_"))))
 				{
 					BookingInfo.values().remove(bookingID);
-					synchronized (StudentRecord)
-					{
-						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
-					}
 					System.out.println("Booking Successfully Deleted");
 					bookingAvailRecords = updateBookingAvailRecord();
 				}
@@ -1261,7 +1300,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 	public void changeReservation(String studentId, String bookingID, String newCampusName, 
 			int newRoomNumber, String newDate, String newTimeSlot, StringHolder outputRt) 
 	{
-		outputRt.value = null;
+		outputRt.value = "FAILED";
 		Integer rt = 0;
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
@@ -1269,6 +1308,10 @@ class rmirpcImpl extends drrsCorbaPOA {
 		fileName = fileName.concat(".txt");
 		File logFile = new File(fileName);
 		PrintWriter out = null;
+		
+		System.out.println("Change RES: Change request received: ");
+		System.out.println("Change RES: Old booking: " + bookingID);
+		System.out.println("Change RES: New booking: " + newCampusName + "_" + newRoomNumber + "_" + newDate + "_" + newTimeSlot);
 		
 		try
 		{
@@ -1293,7 +1336,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(validateStudentId(studentId) == -1)
 				{
 					out.printf("\nRequest Failed\nServer Response: null");
-					outputRt.value = null;
+					outputRt.value = "FAILED";
 					return;
 				}
 			}
@@ -1312,45 +1355,46 @@ class rmirpcImpl extends drrsCorbaPOA {
 					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
 				}
 				
-				if(outputRt.value == null)
+				if(outputRt.value.equals("FAILED") == true)
 				{
 					outputRt.value = "FAILED";
+					return;
 				}
 				
-				if((serverName == "DVL") && (((bookingID.substring(11, 14)).equals("DVL")) == false))
+				if((serverName == "DVL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == false))
 				{
-					if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 						this.out = out;
 					}
-					else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 						this.out = out;
 					}
 				}
-				else if((serverName == "KKL") && (((bookingID.substring(11, 14)).equals("KKL")) == false))
+				else if((serverName == "KKL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == false))
 				{
-					if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 						this.out = out;
 					}
-					else if(((bookingID.substring(11, 14)).equals("WST")) == true)
+					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 						this.out = out;
 					}
 				}
-				else if((serverName == "WST") && (((bookingID.substring(11, 14)).equals("WST")) == false))
+				else if((serverName == "WST") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == false))
 				{
-					if(((bookingID.substring(11, 14)).equals("KKL")) == true)
+					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 						this.out = out;
 					}
-					else if(((bookingID.substring(11, 14)).equals("DVL")) == true)
+					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 					{
 						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 						this.out = out;
@@ -1362,6 +1406,10 @@ class rmirpcImpl extends drrsCorbaPOA {
 					if(rt == 0)
 					{
 						out.printf("Request Success");
+						synchronized (StudentRecord)
+						{
+							StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+						}
 					}
 					else
 					{
