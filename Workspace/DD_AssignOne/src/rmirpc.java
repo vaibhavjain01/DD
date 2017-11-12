@@ -606,6 +606,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					out.printf("\nRequest Failed");
 					out.printf("\nServer Response: null");
+					System.out.println("Student Validation Failed");
 					rt.value = "FAILED";
 					return;
 				}
@@ -685,6 +686,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 				else
 				{
+					System.out.println("roomBooker function failed");
 					rt.value = "FAILED";
 					out.printf("\nRequest Failed");
 				}
@@ -825,7 +827,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(validateStudentId(studentId) == -1)
 				{
 					out.println("\nRequest Failed\nServer Response: null");
-					outputRt.value = "NULL";
+					outputRt.value = "FAILED";
 					return;
 					// vj return null;
 				}
@@ -863,7 +865,20 @@ class rmirpcImpl extends drrsCorbaPOA {
 				rt = rt.concat(", ");
 				if(bookingAvailRecords.size() > 0)
 				{
-					rt = rt.concat(bookingAvailRecords.get(date));
+					if(date == null)
+					{
+						rt = "FAILED";
+						outputRt.value = rt;
+						return;
+					}
+					String tmpRec = bookingAvailRecords.get(date);
+					if(tmpRec == null)
+					{
+						rt = "FAILED";
+						outputRt.value = rt;
+						return;
+					}
+					rt = rt.concat(tmpRec);
 				}
 				out.printf("\nRequest Success\nServer Response: %s", rt);
 				out.close();
@@ -1335,6 +1350,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				    
 				if(validateStudentId(studentId) == -1)
 				{
+					System.out.println("student validation failed");
 					out.printf("\nRequest Failed\nServer Response: null");
 					outputRt.value = "FAILED";
 					return;
@@ -1344,19 +1360,23 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(newCampusName.equals("DVL") == true)
 				{
+					System.out.println("CHANGE REQ FORWARDED");
 					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortDVL());
 				}
 				else if(newCampusName.equals("KKL") == true)
 				{
+					System.out.println("CHANGE REQ FORWARDED");
 					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortKKL());
 				}
 				else if(newCampusName.equals("WST") == true)
 				{
+					System.out.println("CHANGE REQ FORWARDED");
 					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
 				}
 				
 				if(outputRt.value.equals("FAILED") == true)
 				{
+					System.out.println("CHANGE REQ FORWARDED FAILED");
 					outputRt.value = "FAILED";
 					return;
 				}
