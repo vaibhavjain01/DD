@@ -26,7 +26,7 @@ public class client
 	{
 		try
 		{
-			client objClient = new client();
+			client_2 objClient = new client_2();
 		    // create and initialize the ORB
 			ORB orb = ORB.init(args, null);
 			// get the root naming context

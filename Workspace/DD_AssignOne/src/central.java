@@ -2,70 +2,32 @@ import drrs.drrsCorba;
 
 /* Central Repository */
 public class central {
-	private drrsCorba DVLServer = null;
-	private drrsCorba KKLServer = null;
-	private drrsCorba WSTServer = null;
-	private Integer udpPortDVL = null;
-	private Integer udpPortKKL = null;
-	private Integer udpPortWST = null;
+	public static Integer udpPortRM1 = 9851;
+	public static Integer udpPortDVLRM1 = 9852;
+	public static Integer udpPortKKLRM1 = 9853;
+	public static Integer udpPortWSTRM1 = 9854;
 	
-	public void setDVLServer(drrsCorba inUrl)
+	public static Integer udpPortRM2 = 9751;
+	public static Integer udpPortDVLRM2 = 9752;
+	public static Integer udpPortKKLRM2 = 9753;
+	public static Integer udpPortWSTRM2 = 9754;
+	
+	public static Integer udpPortRM3 = 9651;
+	public static Integer udpPortDVLRM3 = 9652;
+	public static Integer udpPortKKLRM3 = 9653;
+	public static Integer udpPortWSTRM3 = 9654;
+	
+	public static Integer udpPortFE = 9889;
+	
+	public static drrsCorba frontEndURL = null;
+	
+	public static void setFrontEnd(drrsCorba inUrl)
 	{
-		DVLServer = inUrl;
+		frontEndURL = inUrl;
 	}
 	
-	public void setKKLServer(drrsCorba inUrl)
+	public static drrsCorba getFrontEnd()
 	{
-		KKLServer = inUrl;
-	}
-	
-	public void setWSTServer(drrsCorba inUrl)
-	{
-		WSTServer = inUrl;
-	}
-	
-	public drrsCorba getDVLServer()
-	{
-		return DVLServer;
-	}
-	
-	public drrsCorba getKKLServer()
-	{
-		return KKLServer;
-	}
-	
-	public drrsCorba getWSTServer()
-	{
-		return WSTServer;
-	}
-	
-	public void setUdpPortDVL(Integer udpPort)
-	{
-		udpPortDVL = udpPort;
-	}
-	
-	public void setUdpPortKKL(Integer udpPort)
-	{
-		udpPortKKL = udpPort;
-	}
-	
-	public void setUdpPortWST(Integer udpPort)
-	{
-		udpPortWST = udpPort;
-	}
-	
-	public Integer getUdpPortDVL()
-	{
-		return udpPortDVL;
-	}
-	
-	public Integer getUdpPortKKL()
-	{
-		return udpPortKKL;
-	}
-	
-	public Integer getUdpPortWST()
-	{
-		return udpPortWST;
+		return frontEndURL;
 	}
 }

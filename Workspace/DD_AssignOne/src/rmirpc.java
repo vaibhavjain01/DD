@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import drrs.*;
 import org.omg.CosNaming.*;
 import org.omg.CosNaming.NamingContextPackage.*;
 import org.omg.CORBA.*;
@@ -110,7 +109,7 @@ class listenThread extends Thread
 }
 
 
-class rmirpcImpl extends drrsCorbaPOA {
+class rmirpcImpl {
 	public static final String MSG = "Hello World";
 	private static final long serialVersionUID = 1L;
 	
@@ -276,7 +275,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 	 * -1 Failure
 	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
 	 */
-	@Override
 	public void createRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
 	{
 		rt.value = 0;
@@ -455,7 +453,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		return (date + "#" + Integer.toString(roomNumber) + "#" + timeSlot);
 	}
 	
-	@Override
 	public void deleteRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
 	{
 		rt.value = 0;
@@ -568,7 +565,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 	
 	/* Student */
-	@Override
 	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt, String campusName)
 	{
 		//String rt = null;
@@ -626,12 +622,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("KKL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortKKLRM1);
 					this.out = out;
 				}
 				else if(((campusName).equals("WST")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortWSTRM1);
 					this.out = out;
 				}
 			}
@@ -639,12 +635,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("DVL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortDVLRM1);
 					this.out = out;
 				}
 				else if(((campusName).equals("WST")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortWSTRM1);
 					this.out = out;
 				}
 			}
@@ -652,12 +648,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("KKL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortKKLRM1);
 					this.out = out;
 				}
 				else if(((campusName).equals("DVL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, central.udpPortDVLRM1);
 					this.out = out;
 				}
 			}
@@ -801,7 +797,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		return rt.value;
 	}
 	
-	@Override
 	public void getAvailableTimeSlot(String studentId, String date, StringHolder outputRt) 
 	{
 		String recordOne = null;
@@ -834,18 +829,18 @@ class rmirpcImpl extends drrsCorbaPOA {
 				
 				if(serverName == "DVL")
 				{
-					recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
-					recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+					//recordOne = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+					//recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
 				}
 				else if(serverName == "KKL")
 				{
-					recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
-					recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
+					//recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+					//recordTwo = getAvailableRecordFromServer(cenRepoObj.getWSTServer(), cenRepoObj.getUdpPortWST(), request);
 				}
 				else if(serverName == "WST")
 				{
-					recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
-					recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
+					//recordOne = getAvailableRecordFromServer(cenRepoObj.getDVLServer(), cenRepoObj.getUdpPortDVL(), request);
+					//recordTwo = getAvailableRecordFromServer(cenRepoObj.getKKLServer(), cenRepoObj.getUdpPortKKL(), request);
 				}
 				try {
 					Thread.sleep(2000);
@@ -893,7 +888,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		//return rt;
 	}
 	
-	private String getAvailableRecordFromServer(drrsCorba inUrl, Integer inUdpPort, String request)
+	private String getAvailableRecordFromServer(String inUrl, Integer inUdpPort, String request)
 	{
 		String record = null;
 		DatagramSocket clientSocket = null;
@@ -959,7 +954,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		return record;
 	}
 
-	@Override
 	public void cancelBooking(String studentId, String bookingID, IntHolder rt)
 	{
 		//Integer rt = new Integer(0);
@@ -1009,12 +1003,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortKKLRM1);
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortWSTRM1);
 					this.out = out;
 				}
 			}
@@ -1022,12 +1016,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortDVLRM1);
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortWSTRM1);
 					this.out = out;
 				}
 			}
@@ -1035,12 +1029,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortKKLRM1);
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					rt.value = roomCancelForwarder(studentId, bookingID, central.udpPortDVLRM1);
 					this.out = out;
 				}
 			}
@@ -1305,13 +1299,11 @@ class rmirpcImpl extends drrsCorbaPOA {
 		return 0;
 	}
 
-	@Override
 	public void shutdown() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void changeReservation(String studentId, String bookingID, String newCampusName, 
 			int newRoomNumber, String newDate, String newTimeSlot, StringHolder outputRt) 
 	{
@@ -1361,17 +1353,17 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(newCampusName.equals("DVL") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortDVL());
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, central.udpPortDVLRM1);
 				}
 				else if(newCampusName.equals("KKL") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortKKL());
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, central.udpPortKKLRM1);
 				}
 				else if(newCampusName.equals("WST") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
+					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, central.udpPortWSTRM1);
 				}
 				
 				if(outputRt.value.equals("FAILED") == true)
@@ -1385,12 +1377,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortKKLRM1);
 						this.out = out;
 					}
 					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortWSTRM1);
 						this.out = out;
 					}
 				}
@@ -1398,12 +1390,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortDVLRM1);
 						this.out = out;
 					}
 					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortWSTRM1);
 						this.out = out;
 					}
 				}
@@ -1411,12 +1403,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortKKLRM1);
 						this.out = out;
 					}
 					else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 					{
-						rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+						rt = roomCancelForwarder(studentId, bookingID, central.udpPortDVLRM1);
 						this.out = out;
 					}
 				}
@@ -1452,75 +1444,23 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 }
 
+/* REPLICA MANAGER */
 public class rmirpc
 {
-	public static void main(String args[])
-	{
-		rmirpc objServerStarter = new rmirpc();
-		
-		objServerStarter.createServer(args);
-		
-	}
-	
-	void createServer(String args[])
+	Integer DVLport = central.udpPortDVLRM1;
+	Integer KKLport = central.udpPortKKLRM1;
+	Integer WSTport = central.udpPortWSTRM1;
+	Integer RMport = central.udpPortRM1;
+	void createServers()
 	{
 		try
 		{
-			// create and initialize the ORB
-		    ORB orb = ORB.init(args, null);
-		    // get reference to rootpoa & activate the POAManager
-		    POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-		    rootpoa.the_POAManager().activate();
-		    // create servant and register it with the ORB
-		    central objCentral = new central();
-		    
-		    rmirpcImpl objRmirpcImplDVL = new rmirpcImpl("DVL", 9852, objCentral);
-		    rmirpcImpl objRmirpcImplKKL = new rmirpcImpl("KKL", 9752, objCentral);
-		    rmirpcImpl objRmirpcImplWST = new rmirpcImpl("WST", 9652, objCentral);
-		    //rmirpcImpl objRmirpcImpl = new rmirpcImpl(serverName, serverPort, objCentral);
-		    
-		    objRmirpcImplDVL.setORB(orb);
-		    objRmirpcImplKKL.setORB(orb);
-		    objRmirpcImplWST.setORB(orb);
-
-		    // get object reference from the servant
-		    org.omg.CORBA.Object refDVL = rootpoa.servant_to_reference(objRmirpcImplDVL);
-		    org.omg.CORBA.Object refKKL = rootpoa.servant_to_reference(objRmirpcImplKKL);
-		    org.omg.CORBA.Object refWST = rootpoa.servant_to_reference(objRmirpcImplWST);
-		    
-		    drrsCorba hrefDVL = drrsCorbaHelper.narrow(refDVL);
-		    drrsCorba hrefKKL = drrsCorbaHelper.narrow(refKKL);
-		    drrsCorba hrefWST = drrsCorbaHelper.narrow(refWST);
-		    
-		    // get the root naming context
-		    // NameService invokes the name service
-		    org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
-		    // Use NamingContextExt which is part of the Interoperable Naming Service (INS) specification.
-		    NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-		    
-		    // bind the Object Reference in Naming
-		    NameComponent pathDVL[] = ncRef.to_name( "DVL" );
-		    NameComponent pathKKL[] = ncRef.to_name( "KKL" );
-		    NameComponent pathWST[] = ncRef.to_name( "WST" );
-		    /* href contains the path server location */
-		    ncRef.rebind(pathDVL, hrefDVL);
-		    ncRef.rebind(pathKKL, hrefKKL);
-		    ncRef.rebind(pathWST, hrefWST);
-		    
-		    System.out.println(hrefDVL);
-		    System.out.println(hrefKKL);
-		    System.out.println(hrefWST);
-		    
-		    objCentral.setDVLServer(hrefDVL);
-		    objCentral.setKKLServer(hrefKKL);
-		    objCentral.setWSTServer(hrefWST);
-		    objCentral.setUdpPortDVL(9852);
-		    objCentral.setUdpPortKKL(9752);
-		    objCentral.setUdpPortWST(9652);
-		    
+			dvlServer.start();
+			kklServer.start();
+			wstServer.start();
+			rmListener.start();
+		    //rmirpcImpl objRmirpcImplDVL = new rmirpcImpl("DVL", DVLport, objCentral);
 		    System.out.println("Servers are ready and waiting ...");
-		    // wait for invocations from clients
-		    orb.run();
 		}
 		catch(Exception e)
 		{
@@ -1529,5 +1469,211 @@ public class rmirpc
 		}
 		
 		System.out.println("Servers Exiting ...");
+	}
+	
+	Thread rmListener = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(RMport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            System.out.println(RMport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread dvlServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(DVLport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            System.out.println(DVLport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread kklServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(KKLport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            System.out.println(KKLport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread wstServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(WSTport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            System.out.println(WSTport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+
+	public static void main(String args[])
+	{
+		rmirpc objServerStarter = new rmirpc();
+		objServerStarter.createServers();
 	}
 }
