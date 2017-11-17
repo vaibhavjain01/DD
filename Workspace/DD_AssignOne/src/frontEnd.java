@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -179,12 +180,9 @@ public class frontEnd extends drrsCorbaPOA {
 		System.out.println("SHUTDOWN");
 	}
 
-	public void addToMsgQueue(String req)
+	synchronized public void addToMsgQueue(String req)
 	{
-		synchronized(this)
-		{
-			this.msgQueue.add(req);
-		}
+		this.msgQueue.add(req);
 	}
 	/* Sequencer */
 	Thread sequencer = new Thread()
@@ -203,8 +201,8 @@ public class frontEnd extends drrsCorbaPOA {
 			}
 			 if(size > 0)
 			 {
-				 handleReq(msgQueue.get(0));
-				 synchronized (this) {
+				 synchronized (msgQueue) {
+					 handleReq(msgQueue.get(0));
 					 msgQueue.remove(0);
 				 }
 			 } 
@@ -219,6 +217,7 @@ public class frontEnd extends drrsCorbaPOA {
 		 Integer portRM1 = central.udpPortRM1;
 		 Integer portRM2 = central.udpPortRM2;
 		 Integer portRM3 = central.udpPortRM3;
+		 System.out.println("At front end: " + req);
 		 if(serverFlag == 0) // DVL
 		 {
 			 replicaPortOne = central.udpPortDVLRM1;
@@ -260,9 +259,11 @@ public class frontEnd extends drrsCorbaPOA {
 			  String sentence = request;
 			  sendData = sentence.getBytes();
 			  DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inServerPort);
-			  clientSocket.send(sendPacket);  
+			  clientSocket.send(sendPacket);
+			  clientSocket.setSoTimeout(3000);
 			  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			  clientSocket.receive(receivePacket);
+			  
 			  if(receiveData[0] == 0)
 			  {
 				  return null;
@@ -284,7 +285,7 @@ public class frontEnd extends drrsCorbaPOA {
 		  }
 		  catch(IOException e)
 		  {
-			  e.printStackTrace();
+			  //e.printStackTrace();
 		  }
 		  catch(NegativeArraySizeException e)
 		  {
