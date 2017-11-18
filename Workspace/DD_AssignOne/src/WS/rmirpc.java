@@ -1,3 +1,4 @@
+package WS;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,8 +12,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.rmi.*;
-import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -22,12 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import drrs.*;
-import org.omg.CosNaming.*;
-import org.omg.CosNaming.NamingContextPackage.*;
-import org.omg.CORBA.*;
-import org.omg.PortableServer.*;
-
+import javax.jws.WebService;
+import javax.jws.soap.SOAPBinding;
+import javax.jws.soap.SOAPBinding.Style;
+import javax.xml.ws.Endpoint;
 
 /* This class contains code to create a UDP listen thread for each server.
  */
@@ -79,6 +76,10 @@ class listenThread extends Thread
                 {
                 	sendData = response.getBytes();
                 }
+                else
+                {
+                	sendData = "".getBytes();
+                }
                 
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
                 serverSocket.send(sendPacket);
@@ -109,8 +110,9 @@ class listenThread extends Thread
 	}
 }
 
-
-class rmirpcImpl extends drrsCorbaPOA {
+@WebService(endpointInterface="WS.wsInter")
+@SOAPBinding(style=Style.RPC)
+public class rmirpc implements wsInter {
 	public static final String MSG = "Hello World";
 	private static final long serialVersionUID = 1L;
 	
@@ -140,23 +142,16 @@ class rmirpcImpl extends drrsCorbaPOA {
 	/* Log File Output */
 	private FileOutputStream userLog = null;
 	
-	private ORB orb;
-	
 	private PrintWriter out;
 	
 	//protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
-	protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
+	protected rmirpc(String inServerName, Integer udpPort, central inCenRepoObj)
 	{
 		serverName = inServerName;
 		cenRepoObj = inCenRepoObj;
 		udpListenThread = new listenThread(udpPort, bookingAvailRecords);
 		listenToUDP.start();
 		resetCounter.start();
-	}
-	
-	public void setORB(ORB orb_val) 
-	{
-		orb = orb_val; 
 	}
 	
 	/* Generic */
@@ -277,10 +272,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 	 * @see rmiinterface#createRoom(java.lang.Integer, java.lang.String, java.util.List)
 	 */
 	@Override
-	public void createRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
+	public Integer createRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots)
 	{
-		rt.value = 0;
-		//Integer rt = new Integer(0);
+		Integer rt = new Integer(0);
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(adminId);
@@ -321,8 +315,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(validateAdminId(adminId) == -1)
 				{
 					out.printf("\nRequest Failed\n Server Response: -1");
-					rt.value = -1;
-					return;
+					rt = -1;
+					return rt;
 				}
 			}
 			synchronized(DateRoomSlots)
@@ -336,8 +330,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 						{
 							for(int j=0; j<listOfTimeSlots.size(); j++)
 							{
-								rt.value = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
-								if(rt.value == -1)
+								rt = checkIfConflict(cTimeSlots.get(i), listOfTimeSlots.get(j));
+								if(rt == -1)
 								{
 									//System.out.printf("\nTimeslot %s already exists and conflicts with %s.", cTimeSlots.get(i), listOfTimeSlots.get(j));
 									listOfTimeSlots.remove(j);
@@ -373,11 +367,11 @@ class rmirpcImpl extends drrsCorbaPOA {
 			}
 		
 			System.out.printf("\nTimeslot Addition Procedure Completed");
-			rt.value = 0;
+			rt = 0;
 			bookingAvailRecords = updateBookingAvailRecord();
 			synchronized(this)
 			{
-				out.printf("\nRequest Completed for Non Conflicted Timeslots\nServer Response %d", rt.value);
+				out.printf("\nRequest Completed for Non Conflicted Timeslots\nServer Response %d", rt);
 				out.close();
 			}
 		} 
@@ -385,7 +379,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 		{
 			e.printStackTrace();
 		} 
-		return;
+		return rt;
 	}
 	
 	private Integer checkIfConflict(String timeOne, String timeTwo)
@@ -456,10 +450,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 	
 	@Override
-	public void deleteRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots, IntHolder rt)
+	public Integer deleteRoom(String adminId, int roomNumber, String date, String[] inListOfTimeSlots)
 	{
-		rt.value = 0;
-		//Integer rt = new Integer(0);
+		Integer rt = new Integer(0);
 		String bookingName = null;
 		String studentId = null;
 		List<String> listOfTimeSlots = Arrays.asList(inListOfTimeSlots);
@@ -481,98 +474,102 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				out = new PrintWriter(fileName);
 			}
+			synchronized (out) {
+				
+			    out.printf("\\n\nDate: %s\nTime: %s\nRequestType: DeleteRoom"
+			    		+ "\nRequestParam: \n(AdminId = %s)\n(RoomNumber = %d)\n(Date = %s)", 
+			    		LocalDate.now(), LocalTime.now(), adminId, roomNumber, date);
+		    	
+			    out.println("\n(TimeSlots: ");
 			
-		    out.printf("\\n\nDate: %s\nTime: %s\nRequestType: DeleteRoom"
-		    		+ "\nRequestParam: \n(AdminId = %s)\n(RoomNumber = %d)\n(Date = %s)", 
-		    		LocalDate.now(), LocalTime.now(), adminId, roomNumber, date);
-	    	
-		    out.println("\n(TimeSlots: ");
-	    	
-		    for(int i = 0; i < listOfTimeSlots.size(); i++)
-		    {
-		    	out.printf("%s, ", listOfTimeSlots.get(i));
-		    }
-		    
-		    out.println(")");
-		    
-		
-			if(validateAdminId(adminId) == -1)
-			{
-				out.printf("\nRequest Failed\n Server Response: -1");
-				rt.value = -1;
-				return;
+			    for(int i = 0; i < listOfTimeSlots.size(); i++)
+			    {
+			    	out.printf("%s, ", listOfTimeSlots.get(i));
+			    }
+			    
+			    out.println(")");
+			    
+				if(validateAdminId(adminId) == -1)
+				{
+					out.printf("\nRequest Failed\n Server Response: -1");
+					rt = -1;
+					return rt;
+				}
 			}
 			
-			if(DateRoomSlots.containsKey(date))
-			{
-				if((DateRoomSlots.get(date)).containsKey(roomNumber))
+			synchronized (this) {
+				
+				if(DateRoomSlots.containsKey(date))
 				{
-					ListIterator<String> li = listOfTimeSlots.listIterator();
-					List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
-					
-				    while(li.hasNext())
-				    {
-				    	String tmpTimeSlot = li.next();
-				    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
-				    	if(BookingInfo.containsKey(bookingName))
-				    	{
-					    	studentId = BookingInfo.get(bookingName);
-					    	if(studentId != null)
-					    	{			    		
-					    		studentId = studentId.substring(0, studentId.indexOf("_"));
-					    		BookingInfo.remove(bookingName);
-					    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+					if((DateRoomSlots.get(date)).containsKey(roomNumber))
+					{
+						ListIterator<String> li = listOfTimeSlots.listIterator();
+						List<String> tmp = ((DateRoomSlots.get(date)).get(roomNumber));
+						
+					    while(li.hasNext())
+					    {
+					    	String tmpTimeSlot = li.next();
+					    	bookingName = genBookingInfoKey(date, roomNumber, tmpTimeSlot);
+					    	if(BookingInfo.containsKey(bookingName))
+					    	{
+						    	studentId = BookingInfo.get(bookingName);
+						    	if(studentId != null)
+						    	{			    		
+						    		studentId = studentId.substring(0, studentId.indexOf("_"));
+						    		BookingInfo.remove(bookingName);
+						    		StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
+						    	}
 					    	}
-				    	}
-				    	((DateRoomSlots.get(date)).get(roomNumber)).remove(tmpTimeSlot);
+					    	((DateRoomSlots.get(date)).get(roomNumber)).remove(tmpTimeSlot);
+						}
+					    
+					    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
+					    {
+					    	(DateRoomSlots.get(date)).remove(roomNumber);
+					    }
+					    
+					    if((DateRoomSlots.get(date)).size() == 0)
+					    {
+					    	DateRoomSlots.remove(date);
+					    }
+					    
+					    System.out.println("TimsSlot successfully Deleted");
+					    out.printf("\nRequest Success");
 					}
-				    
-				    if(((DateRoomSlots.get(date)).get(roomNumber)).isEmpty())
-				    {
-				    	(DateRoomSlots.get(date)).remove(roomNumber);
-				    }
-				    
-				    if((DateRoomSlots.get(date)).size() == 0)
-				    {
-				    	DateRoomSlots.remove(date);
-				    }
-				    
-				    System.out.println("TimsSlot successfully Deleted");
-				    out.printf("\nRequest Success");
+					else
+					{
+						System.out.println("No record could be found matching input details");
+						out.printf("\nRequest Failed");
+						rt = -1;
+						return rt;
+					}
 				}
 				else
 				{
 					System.out.println("No record could be found matching input details");
 					out.printf("\nRequest Failed");
-					rt.value = -1;
-					return;
+					rt = -1;
+					return rt;
 				}
+				bookingAvailRecords = updateBookingAvailRecord();
+				out.printf("\nServer Response: %d", rt);
+				out.close();
 			}
-			else
-			{
-				System.out.println("No record could be found matching input details");
-				out.printf("\nRequest Failed");
-				rt.value = -1;
-				return;
-			}
-			bookingAvailRecords = updateBookingAvailRecord();
-			out.printf("\nServer Response: %d", rt.value);
-			out.close();
 		} 
 		catch (IOException e) 
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return;
+		return rt;
 	}
 	
 	/* Student */
 	@Override
-	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt, String campusName)
+	public String bookRoom(String studentId, int roomNumber, String date, String timeSlot, String campusName)
 	{
-		//String rt = null;
-		rt.value = "FAILED";
+		String rt = null;
+		rt = "FAILED";
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(studentId);
@@ -607,8 +604,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 					out.printf("\nRequest Failed");
 					out.printf("\nServer Response: null");
 					System.out.println("Student Validation Failed");
-					rt.value = "FAILED";
-					return;
+					rt = "FAILED";
+					return rt;
 				}
 			}
 
@@ -617,8 +614,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(StudentRecord.get(studentId) == 3)
 				{
 					System.out.println("Maximum Booking Count Reached for this Student ID");
-					rt.value = "FAILED";
-					return;
+					rt = "FAILED";
+					return rt;
 				}
 			}
 			
@@ -626,12 +623,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("KKL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
 				else if(((campusName).equals("WST")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
@@ -639,12 +636,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("DVL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
 				else if(((campusName).equals("WST")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
@@ -652,25 +649,25 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((campusName).equals("KKL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
 				else if(((campusName).equals("DVL")) == true)
 				{
-					rt.value = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
+					rt = roomBookForwarder(studentId, roomNumber, date, timeSlot, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
 			}
 			else
 			{
-				rt.value = roomBookerFun(studentId, roomNumber, date, timeSlot);
+				rt = roomBookerFun(studentId, roomNumber, date, timeSlot);
 			}
 			synchronized(this)
 			{
-				out.printf("\nServer Response: %s", rt.value);
+				out.printf("\nServer Response: %s", rt);
 				out.close();
 				
-				if(rt.value != null)
+				if(rt != null)
 				{
 					if(StudentRecord.containsKey(studentId))
 					{
@@ -687,7 +684,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 				else
 				{
 					System.out.println("roomBooker function failed");
-					rt.value = "FAILED";
+					rt = "FAILED";
 					out.printf("\nRequest Failed");
 				}
 			}
@@ -697,7 +694,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return;
+		return rt;
 	}
 	
 	private String roomBookForwarder(String studentId, Integer roomNumber, String date, String timeSlot, Integer inUdpPort)
@@ -745,10 +742,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		{
 			e.printStackTrace();
 		}
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
 		catch(IOException e)
 		{
 			e.printStackTrace();
@@ -770,7 +763,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 	
 	private String roomBookerFun(String studentId, int roomNumber, String date, String timeSlot)
 	{
-		StringHolder rt = new StringHolder(null);
+		String rt = "FAILED";
 		
 		synchronized(DateRoomSlots)
 		{
@@ -784,13 +777,13 @@ class rmirpcImpl extends drrsCorbaPOA {
 						if(BookingInfo.containsKey(tmpBookingKey))
 						{
 							System.out.printf("Booking already exists with %s Booking ID", BookingInfo.get(tmpBookingKey));
-							rt.value = null;
+							rt = null;
 						}
 						else
 						{
-							rt.value = genBookingId(studentId, date, roomNumber, timeSlot, this.serverName);
+							rt = genBookingId(studentId, date, roomNumber, timeSlot, this.serverName);
 							BookingCounter = 1;
-							BookingInfo.put(tmpBookingKey, rt.value);
+							BookingInfo.put(tmpBookingKey, rt);
 							System.out.println("Booking Procedure Successfully Completed");
 							bookingAvailRecords = updateBookingAvailRecord();
 						}
@@ -798,12 +791,13 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 			}
 		}
-		return rt.value;
+		return rt;
 	}
 	
 	@Override
-	public void getAvailableTimeSlot(String studentId, String date, StringHolder outputRt) 
+	public String getAvailableTimeSlot(String studentId, String date) 
 	{
+		String outputRt = null;
 		String recordOne = null;
 		String recordTwo = null;
 		String request = date + "_CheckRoom";
@@ -827,8 +821,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(validateStudentId(studentId) == -1)
 				{
 					out.println("\nRequest Failed\nServer Response: null");
-					outputRt.value = "FAILED";
-					return;
+					outputRt = "FAILED";
+					return outputRt;
 					// vj return null;
 				}
 				
@@ -868,15 +862,15 @@ class rmirpcImpl extends drrsCorbaPOA {
 					if(date == null)
 					{
 						rt = "FAILED";
-						outputRt.value = rt;
-						return;
+						outputRt = rt;
+						return outputRt;
 					}
 					String tmpRec = bookingAvailRecords.get(date);
 					if(tmpRec == null)
 					{
 						rt = "FAILED";
-						outputRt.value = rt;
-						return;
+						outputRt = rt;
+						return outputRt;
 					}
 					rt = rt.concat(tmpRec);
 				}
@@ -889,11 +883,11 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		outputRt.value = rt;
-		//return rt;
+		outputRt = rt;
+		return outputRt;
 	}
 	
-	private String getAvailableRecordFromServer(drrsCorba inUrl, Integer inUdpPort, String request)
+	private String getAvailableRecordFromServer(Endpoint inUrl, Integer inUdpPort, String request)
 	{
 		String record = null;
 		DatagramSocket clientSocket = null;
@@ -936,10 +930,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		{
 			e.printStackTrace();
 		}
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
 		catch(IOException e)
 		{
 			e.printStackTrace();
@@ -960,10 +950,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 
 	@Override
-	public void cancelBooking(String studentId, String bookingID, IntHolder rt)
+	public Integer cancelBooking(String studentId, String bookingID)
 	{
-		//Integer rt = new Integer(0);
-		rt.value = 0;
+		Integer rt = new Integer(0);
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
 		fileName = fileName.concat(studentId);
@@ -994,27 +983,27 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(validateStudentId(studentId) == -1)
 				{
 					out.printf("\nRequest Failed\nServer Response: null");
-					rt.value = -1;
-					return;
+					rt = -1;
+					return rt;
 				}
 			}
 			
 			if(bookingID.length() < 14)
 			{
-				rt.value = -1;
-				return;
+				rt = -1;
+				return rt;
 			}
 			
 			if((serverName == "DVL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == false))
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
@@ -1022,12 +1011,12 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("WST")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortWST());
 					this.out = out;
 				}
 			}
@@ -1035,27 +1024,27 @@ class rmirpcImpl extends drrsCorbaPOA {
 			{
 				if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("KKL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortKKL());
 					this.out = out;
 				}
 				else if(((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == true)
 				{
-					rt.value = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
+					rt = roomCancelForwarder(studentId, bookingID, cenRepoObj.getUdpPortDVL());
 					this.out = out;
 				}
 			}
 			else
 			{
-				rt.value = bookingCanceller(studentId, bookingID);
+				rt = bookingCanceller(studentId, bookingID);
 			}
 			synchronized(out)
 			{
-				out.printf("\nServer Response: %d", rt.value);
+				out.printf("\nServer Response: %d", rt);
 				out.close();
 				
 				synchronized (StudentRecord)
 				{
-					if(rt.value == 0)
+					if(rt == 0)
 					{
 						StudentRecord.put(studentId, StudentRecord.get(studentId) - 1);
 						out.printf("Request Success");
@@ -1072,7 +1061,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return;
+		return rt;
 	}
 	
 	private Integer roomCancelForwarder(String studentId, String bookingId, Integer inUdpPort)
@@ -1120,10 +1109,6 @@ class rmirpcImpl extends drrsCorbaPOA {
 		{
 			e.printStackTrace();
 		}
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
 		catch(IOException e)
 		{
 			e.printStackTrace();
@@ -1145,7 +1130,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 	
 	private int bookingCanceller(String studentId, String bookingID)
 	{
-		IntHolder rt = new IntHolder(0);
+		Integer rt = new Integer(0);
 		
 		if(bookingID.length() > 14)
 		{
@@ -1153,9 +1138,9 @@ class rmirpcImpl extends drrsCorbaPOA {
 		}
 		else
 		{
-			rt.value = -1;
+			rt = -1;
 			System.out.println("Incorrect Booking ID Received for Cancellation");
-			return rt.value;
+			return rt;
 		}
 		synchronized (BookingInfo) 
 		{
@@ -1169,17 +1154,17 @@ class rmirpcImpl extends drrsCorbaPOA {
 				}
 				else
 				{
-					rt.value = -1;
+					rt = -1;
 					System.out.println("A student can only delete his own bookings");
 				}
 			}
 			else
 			{
-				rt.value = -1;
+				rt = -1;
 				System.out.println("No such booking record with provided bookingID was found");
 			}
 		}
-		return rt.value;
+		return rt;
 	}
 	
 	private HashMap<String, String> updateBookingAvailRecord()
@@ -1306,16 +1291,10 @@ class rmirpcImpl extends drrsCorbaPOA {
 	}
 
 	@Override
-	public void shutdown() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void changeReservation(String studentId, String bookingID, String newCampusName, 
-			int newRoomNumber, String newDate, String newTimeSlot, StringHolder outputRt) 
+	public String changeReservation(String studentId, String bookingID, String newCampusName, 
+			int newRoomNumber, String newDate, String newTimeSlot) 
 	{
-		outputRt.value = "FAILED";
+		String outputRt = "FAILED";
 		Integer rt = 0;
 		String fileName = "D:\\Test\\".concat(serverName);
 		fileName = fileName.concat("\\");
@@ -1352,8 +1331,8 @@ class rmirpcImpl extends drrsCorbaPOA {
 				{
 					System.out.println("student validation failed");
 					out.printf("\nRequest Failed\nServer Response: null");
-					outputRt.value = "FAILED";
-					return;
+					outputRt = "FAILED";
+					return outputRt;
 				}
 			}
 			synchronized (this)
@@ -1361,24 +1340,24 @@ class rmirpcImpl extends drrsCorbaPOA {
 				if(newCampusName.equals("DVL") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortDVL());
+					outputRt = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortDVL());
 				}
 				else if(newCampusName.equals("KKL") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortKKL());
+					outputRt = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortKKL());
 				}
 				else if(newCampusName.equals("WST") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED");
-					outputRt.value = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
+					outputRt = roomBookForwarder(studentId, newRoomNumber, newDate, newTimeSlot, cenRepoObj.getUdpPortWST());
 				}
 				
-				if(outputRt.value.equals("FAILED") == true)
+				if(outputRt.equals("FAILED") == true)
 				{
 					System.out.println("CHANGE REQ FORWARDED FAILED");
-					outputRt.value = "FAILED";
-					return;
+					outputRt = "FAILED";
+					return outputRt;
 				}
 				
 				if((serverName == "DVL") && (((bookingID.substring(bookingID.length() - 3, bookingID.length())).equals("DVL")) == false))
@@ -1439,7 +1418,7 @@ class rmirpcImpl extends drrsCorbaPOA {
 			}
 			synchronized(out)
 			{
-				out.printf("\nServer Response: %s", outputRt.value);
+				out.printf("\nServer Response: %s", outputRt);
 				out.close();
 			}
 		} 
@@ -1448,79 +1427,29 @@ class rmirpcImpl extends drrsCorbaPOA {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return;
-	}
-}
-
-public class rmirpc
-{
-	public static void main(String args[])
-	{
-		rmirpc objServerStarter = new rmirpc();
-		
-		objServerStarter.createServer(args);
-		
+		return outputRt;
 	}
 	
-	void createServer(String args[])
+	
+	public static void main(String args[])
 	{
 		try
 		{
-			// create and initialize the ORB
-		    ORB orb = ORB.init(args, null);
-		    // get reference to rootpoa & activate the POAManager
-		    POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-		    rootpoa.the_POAManager().activate();
-		    // create servant and register it with the ORB
 		    central objCentral = new central();
-		    
-		    rmirpcImpl objRmirpcImplDVL = new rmirpcImpl("DVL", 9852, objCentral);
-		    rmirpcImpl objRmirpcImplKKL = new rmirpcImpl("KKL", 9752, objCentral);
-		    rmirpcImpl objRmirpcImplWST = new rmirpcImpl("WST", 9652, objCentral);
-		    //rmirpcImpl objRmirpcImpl = new rmirpcImpl(serverName, serverPort, objCentral);
-		    
-		    objRmirpcImplDVL.setORB(orb);
-		    objRmirpcImplKKL.setORB(orb);
-		    objRmirpcImplWST.setORB(orb);
+			Endpoint endpointDVL = Endpoint.publish("http://localhost/dvl", new rmirpc("DVL", 9852, objCentral));
+			Endpoint endpointKKL = Endpoint.publish("http://localhost/kkl", new rmirpc("KKL", 9752, objCentral));
+			Endpoint endpointWST = Endpoint.publish("http://localhost/wst", new rmirpc("WST", 9652, objCentral));
 
-		    // get object reference from the servant
-		    org.omg.CORBA.Object refDVL = rootpoa.servant_to_reference(objRmirpcImplDVL);
-		    org.omg.CORBA.Object refKKL = rootpoa.servant_to_reference(objRmirpcImplKKL);
-		    org.omg.CORBA.Object refWST = rootpoa.servant_to_reference(objRmirpcImplWST);
-		    
-		    drrsCorba hrefDVL = drrsCorbaHelper.narrow(refDVL);
-		    drrsCorba hrefKKL = drrsCorbaHelper.narrow(refKKL);
-		    drrsCorba hrefWST = drrsCorbaHelper.narrow(refWST);
-		    
-		    // get the root naming context
-		    // NameService invokes the name service
-		    org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
-		    // Use NamingContextExt which is part of the Interoperable Naming Service (INS) specification.
-		    NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-		    
-		    // bind the Object Reference in Naming
-		    NameComponent pathDVL[] = ncRef.to_name( "DVL" );
-		    NameComponent pathKKL[] = ncRef.to_name( "KKL" );
-		    NameComponent pathWST[] = ncRef.to_name( "WST" );
-		    /* href contains the path server location */
-		    ncRef.rebind(pathDVL, hrefDVL);
-		    ncRef.rebind(pathKKL, hrefKKL);
-		    ncRef.rebind(pathWST, hrefWST);
-		    
-		    System.out.println(hrefDVL);
-		    System.out.println(hrefKKL);
-		    System.out.println(hrefWST);
-		    
-		    objCentral.setDVLServer(hrefDVL);
-		    objCentral.setKKLServer(hrefKKL);
-		    objCentral.setWSTServer(hrefWST);
+		    objCentral.setDVLServer(endpointDVL);
+		    objCentral.setKKLServer(endpointKKL);
+		    objCentral.setWSTServer(endpointWST);
 		    objCentral.setUdpPortDVL(9852);
 		    objCentral.setUdpPortKKL(9752);
 		    objCentral.setUdpPortWST(9652);
-		    
+		    System.out.println(endpointDVL.isPublished());
+		    System.out.println(endpointKKL.isPublished());
+		    System.out.println(endpointWST.isPublished());
 		    System.out.println("Servers are ready and waiting ...");
-		    // wait for invocations from clients
-		    orb.run();
 		}
 		catch(Exception e)
 		{

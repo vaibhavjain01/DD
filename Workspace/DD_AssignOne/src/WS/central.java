@@ -1,40 +1,41 @@
-import drrs.drrsCorba;
+package WS;
+import javax.xml.ws.Endpoint;
 
 /* Central Repository */
 public class central {
-	private drrsCorba DVLServer = null;
-	private drrsCorba KKLServer = null;
-	private drrsCorba WSTServer = null;
+	private Endpoint DVLServer = null;
+	private Endpoint KKLServer = null;
+	private Endpoint WSTServer = null;
 	private Integer udpPortDVL = null;
 	private Integer udpPortKKL = null;
 	private Integer udpPortWST = null;
 	
-	public void setDVLServer(drrsCorba inUrl)
+	public void setDVLServer(Endpoint inUrl)
 	{
 		DVLServer = inUrl;
 	}
 	
-	public void setKKLServer(drrsCorba inUrl)
+	public void setKKLServer(Endpoint inUrl)
 	{
 		KKLServer = inUrl;
 	}
 	
-	public void setWSTServer(drrsCorba inUrl)
+	public void setWSTServer(Endpoint inUrl)
 	{
 		WSTServer = inUrl;
 	}
 	
-	public drrsCorba getDVLServer()
+	public Endpoint getDVLServer()
 	{
 		return DVLServer;
 	}
 	
-	public drrsCorba getKKLServer()
+	public Endpoint getKKLServer()
 	{
 		return KKLServer;
 	}
 	
-	public drrsCorba getWSTServer()
+	public Endpoint getWSTServer()
 	{
 		return WSTServer;
 	}
