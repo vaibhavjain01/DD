@@ -237,12 +237,12 @@ public class frontEnd extends drrsCorbaPOA {
 			 replicaPortThree = central.udpPortWSTRM3;
 		 }
 		 
-		 sendUdpReq(replicaPortOne, req);
-		 sendUdpReq(replicaPortTwo, req);
-		 sendUdpReq(replicaPortThree, req);
-		 sendUdpReq(portRM1, req);
-		 sendUdpReq(portRM2, req);
-		 sendUdpReq(portRM3, req);
+		 sendUdpReq(replicaPortOne, req + "RM1");
+		 sendUdpReq(replicaPortTwo, req + "RM2");
+		 sendUdpReq(replicaPortThree, req + "RM3");
+		 sendUdpReq(portRM1, req + "RM1");
+		 sendUdpReq(portRM2, req + "RM2");
+		 sendUdpReq(portRM3, req + "RM3");
 	  }
 	  
 	  public String sendUdpReq(Integer inServerPort, String req)

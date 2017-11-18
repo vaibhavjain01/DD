@@ -1639,7 +1639,8 @@ public class rmirpc
 		            serverSocket.receive(receivePacket);
 		            String request = new String(receivePacket.getData());
 		            System.out.println(WSTport + " received " + request);
-		            /* CHECK REQUEST and get response*/    
+		            /* CHECK REQUEST and get response*/
+		            response = handleUdpRequest(request);
 		            InetAddress IPAddress = receivePacket.getAddress();
 		            int port = receivePacket.getPort();     
 	                if(response != null) {
@@ -1668,6 +1669,27 @@ public class rmirpc
 					serverSocket.close();
 				}
 	 		}
+		}
+		
+		public String handleUdpRequest(String req)
+		{
+			String reqTokens[] = req.split(";");
+			switch(reqTokens[0])
+			{
+			case "create":
+				break;
+			case "delete":
+				break;
+			case "book":
+				break;
+			case "cancel":
+				break;
+			case "available":
+				break;
+			case "change":
+				break;
+			}
+			return null;
 		}
 	};
 
