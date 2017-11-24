@@ -2,29 +2,30 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="serverPort" key="selection"/>
+		<item value="" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="true" key="wholeword"/>
 		<list key="findhistory">
-			<item value="serverPort"/>
-			<item value="setUdpPortDVL"/>
-			<item value="getAvailableRecordFromServer"/>
-			<item value="clientTypeID"/>
-			<item value="book"/>
-			<item value="cancel"/>
-			<item value="sendBookRoom"/>
-			<item value="sendCreateRoom"/>
-			<item value="already"/>
-			<item value="createRoomRpc"/>
-			<item value="already exis"/>
-			<item value="list"/>
-			<item value="bookingAvailRecords"/>
-			<item value="studentId"/>
-			<item value="student"/>
+			<item value="timeslot deleted"/>
+			<item value="timeslot successfully"/>
+			<item value="delete"/>
+			<item value="public"/>
+			<item value="create"/>
+			<item value="return"/>
+			<item value="sleep"/>
+			<item value="udpPort"/>
+			<item value="udpPortFE"/>
+			<item value="trace"/>
+			<item value="frontEnd"/>
+			<item value="BookingCounter"/>
+			<item value="resetCounter"/>
+			<item value="reset"/>
+			<item value="Sending on"/>
 		</list>
 		<list key="replacehistory">
+			<item value="System.out.println"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">

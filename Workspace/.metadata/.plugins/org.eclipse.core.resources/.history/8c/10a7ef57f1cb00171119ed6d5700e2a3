@@ -1,0 +1,308 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.StringTokenizer;
+
+import drrs.*;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+import net.rudp.*;
+
+/* Front End */
+public class frontEnd extends drrsCorbaPOA {
+
+	private ORB orb;
+	private String serverName;
+	private Integer udpPort;
+	private Integer serverFlag = 0;		// 0 = DVL, 1 = KKL, 2 = WST
+	ArrayList<String> msgQueue = new ArrayList<String>();
+	
+	public static void main(String[] args) {
+		frontEnd objServerStarter = new frontEnd();
+		objServerStarter.corbaListen(args);
+	}
+
+	public frontEnd()
+	{
+		// do nothing
+	}
+	
+	public frontEnd(String serverName, Integer udpPort)
+	{
+		this.serverName = serverName;
+		this.udpPort = udpPort;
+		sequencer.start();
+	}
+	
+	public void setORB(ORB orb_val) 
+	{
+		this.orb = orb_val; 
+	}
+	
+	public void corbaListen(String args[])
+	{
+		try
+		{
+			// create and initialize the ORB
+		    ORB orb = ORB.init(args, null);
+		    // get reference to rootpoa & activate the POAManager
+		    POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+		    rootpoa.the_POAManager().activate();
+		    // create servant and register it with the ORB
+		    central objCentral = new central();
+		    
+		    frontEnd objFrontEnd = new frontEnd("FE", central.udpPortFE);
+		    
+		    objFrontEnd.setORB(orb);
+
+		    // get object reference from the servant
+		    org.omg.CORBA.Object refFE = rootpoa.servant_to_reference(objFrontEnd);
+		    
+		    drrsCorba hrefFE = drrsCorbaHelper.narrow(refFE);
+		    
+		    // get the root naming context
+		    // NameService invokes the name service
+		    org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+		    // Use NamingContextExt which is part of the Interoperable Naming Service (INS) specification.
+		    NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+		    
+		    // bind the Object Reference in Naming
+		    NameComponent pathFE[] = ncRef.to_name( "FE" );
+
+		    /* href contains the path server location */
+		    ncRef.rebind(pathFE, hrefFE);
+		    
+		    System.out.println(hrefFE);
+		    central.setFrontEnd(hrefFE);
+		    System.out.println("FE is ready and waiting ...");
+		    // wait for invocations from clients
+		    orb.run();
+		}
+		catch(Exception e)
+		{
+			System.err.println("ERROR: " + e);
+			e.printStackTrace();
+		}
+		
+		System.out.println("FE Exiting ...");
+		return;
+	}
+	
+	public void findServerNameFromRequest(String userId)
+	{
+		if((userId == null) || (userId.length() < 8))
+		{
+			this.serverFlag = -1;
+			return;
+		}
+		
+		if(userId.substring(0, 3).equals("DVL"))
+		{
+			this.serverFlag = 0;
+		}
+		else if(userId.substring(0, 3).equals("KKL"))
+		{
+			this.serverFlag = 1;
+		}
+		else if(userId.substring(0, 3).equals("WST"))
+		{
+			this.serverFlag = 2;
+		}
+	}
+	
+	@Override
+	public void createRoom(String adminId, int roomNumber, String date, String[] listOfTimeSlots, IntHolder rt) {
+		// TODO Auto-generated method stub
+		String req = "create" + ";" + adminId + ";" + Integer.toString(roomNumber) + ";" + date + ";";
+		for(int ctr = 0; ctr < listOfTimeSlots.length; ctr++)
+		{
+			req += listOfTimeSlots[ctr] + ";";
+		}
+		addToMsgQueue(req);
+	}
+
+	@Override
+	public void deleteRoom(String adminId, int roomNumber, String date, String[] listOfTimeSlots, IntHolder rt) {
+		// TODO Auto-generated method stub
+		String req = "delete;" + adminId + ";" + Integer.toString(roomNumber) + ";" + date + ";";
+		for(int ctr = 0; ctr < listOfTimeSlots.length; ctr++)
+		{
+			req += listOfTimeSlots[ctr] + ";";
+		}
+		addToMsgQueue(req);
+	}
+
+	@Override
+	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt,
+			String campusName) {
+		// TODO Auto-generated method stub
+		String req = "book;" + studentId + ";" + Integer.toString(roomNumber) + ";" + date + ";" + timeSlot;
+		addToMsgQueue(req);
+		rt.value = "FAILED";
+	}
+
+	@Override
+	public void getAvailableTimeSlot(String studentId, String date, StringHolder rt) {
+		// TODO Auto-generated method stub
+		String req = "available;" + studentId + "_" + date;
+		addToMsgQueue(req);
+		rt.value = "FAILED";
+	}
+
+	@Override
+	public void cancelBooking(String studentId, String bookingID, IntHolder rt) {
+		// TODO Auto-generated method stub
+		String req = "cancel;" + studentId + "_" + bookingID + "_";
+		addToMsgQueue(req);
+	}
+
+	@Override
+	public void changeReservation(String studentId, String booking_id, String newCampusName, int newRoomNumber,
+			String newDate, String newTimeSlot, StringHolder rt) {
+		// TODO Auto-generated method stub
+		String req = "change;" + studentId + ";" + booking_id + ";" + newCampusName + ";" + Integer.toString(newRoomNumber) + ";"
+				+ newDate + ";" + newTimeSlot;
+		addToMsgQueue(req);
+		rt.value = "FAILED";
+	}
+
+	@Override
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		System.out.println("SHUTDOWN");
+	}
+
+	public void addToMsgQueue(String req)
+	{
+		synchronized(this)
+		{
+			this.msgQueue.add(req);
+		}
+	}
+	/* Sequencer */
+	Thread sequencer = new Thread()
+	{
+	  public void run()
+	  {
+		  Integer size = 0;
+		 while(true)
+		 {
+			 size = msgQueue.size();
+			 try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			 if(size > 0)
+			 {
+				 synchronized (msgQueue) {
+					 handleReq(msgQueue.get(0));
+					 msgQueue.remove(0);
+				 }
+			 } 
+		 }
+	  }
+	
+	  void handleReq(String req)
+	  {
+		 Integer replicaPortOne = 0;
+		 Integer replicaPortTwo = 0;
+		 Integer replicaPortThree = 0;
+		 Integer portRM1 = central.udpPortRM1;
+		 Integer portRM2 = central.udpPortRM2;
+		 Integer portRM3 = central.udpPortRM3;
+		 System.out.println("At front end: " + req);
+		 if(serverFlag == 0) // DVL
+		 {
+			 replicaPortOne = central.udpPortDVLRM1;
+			 replicaPortTwo = central.udpPortDVLRM2;
+			 replicaPortThree = central.udpPortDVLRM3;
+		 }
+		 else if(serverFlag == 1) // KKL
+		 {
+			 replicaPortOne = central.udpPortKKLRM1;
+			 replicaPortTwo = central.udpPortKKLRM2;
+			 replicaPortThree = central.udpPortKKLRM3;
+		 }
+		 else if(serverFlag == 2) //WST
+		 {
+			 replicaPortOne = central.udpPortWSTRM1;
+			 replicaPortTwo = central.udpPortWSTRM2;
+			 replicaPortThree = central.udpPortWSTRM3;
+		 }
+		 
+		 sendUdpReq(replicaPortOne, req);
+		 sendUdpReq(replicaPortTwo, req);
+		 sendUdpReq(replicaPortThree, req);
+		 sendUdpReq(portRM1, req);
+		 sendUdpReq(portRM2, req);
+		 sendUdpReq(portRM3, req);
+	  }
+	  
+	  public String sendUdpReq(Integer inServerPort, String req)
+	  {
+		  DatagramSocket clientSocket = null;
+		  try
+		  {
+			  clientSocket = new DatagramSocket();
+			  InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
+			  byte[] sendData = new byte[1024];
+			  byte[] receiveData = new byte[1024];
+			  int i = 0;
+			  String request = req;
+			  String sentence = request;
+			  sendData = sentence.getBytes();
+			  DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inServerPort);
+			  clientSocket.send(sendPacket);  
+			  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			  clientSocket.receive(receivePacket);
+			  if(receiveData[0] == 0)
+			  {
+				  return null;
+			  }
+			  for(i = 0; i < receiveData.length; i++)
+			  {
+				  if(receiveData[i] == 0)
+				  {
+					  break;
+				  }
+			  }
+			  receiveData.toString();
+			  String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+			  return response;
+		  }
+		  catch(SocketException e)
+		  {
+			  e.printStackTrace();
+		  }
+		  catch(IOException e)
+		  {
+			  e.printStackTrace();
+		  }
+		  catch(NegativeArraySizeException e)
+		  {
+			  // Handled
+		  }
+		  catch(Exception e)
+		  {
+			  e.printStackTrace();
+		  }
+		  finally
+		  {
+			  if(clientSocket != null)
+			  {
+				  clientSocket.close();
+			  }
+		  }
+		  return null;
+	  }
+	};
+}

@@ -1,0 +1,72 @@
+package WS;
+import javax.xml.ws.Endpoint;
+
+/* Central Repository */
+public class central {
+	private Endpoint DVLServer = null;
+	private Endpoint KKLServer = null;
+	private Endpoint WSTServer = null;
+	private Integer udpPortDVL = null;
+	private Integer udpPortKKL = null;
+	private Integer udpPortWST = null;
+	
+	public void setDVLServer(Endpoint inUrl)
+	{
+		DVLServer = inUrl;
+	}
+	
+	public void setKKLServer(Endpoint inUrl)
+	{
+		KKLServer = inUrl;
+	}
+	
+	public void setWSTServer(Endpoint inUrl)
+	{
+		WSTServer = inUrl;
+	}
+	
+	public Endpoint getDVLServer()
+	{
+		return DVLServer;
+	}
+	
+	public Endpoint getKKLServer()
+	{
+		return KKLServer;
+	}
+	
+	public Endpoint getWSTServer()
+	{
+		return WSTServer;
+	}
+	
+	public void setUdpPortDVL(Integer udpPort)
+	{
+		udpPortDVL = udpPort;
+	}
+	
+	public void setUdpPortKKL(Integer udpPort)
+	{
+		udpPortKKL = udpPort;
+	}
+	
+	public void setUdpPortWST(Integer udpPort)
+	{
+		udpPortWST = udpPort;
+	}
+	
+	public Integer getUdpPortDVL()
+	{
+		return udpPortDVL;
+	}
+	
+	public Integer getUdpPortKKL()
+	{
+		return udpPortKKL;
+	}
+	
+	public Integer getUdpPortWST()
+	{
+		return udpPortWST;
+	}
+}

@@ -1,0 +1,6 @@
+package WS;
+
+@Webservice
+public interface wsInter {
+	
+}

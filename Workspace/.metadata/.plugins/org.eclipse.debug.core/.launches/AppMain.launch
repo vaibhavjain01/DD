@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="net.genady.rmi.rmiServer">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/DD_AssignOne/src/AppMain.java"/>
+<listEntry value="/DD_PROJECT/src/AppMain.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="AppMain"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="DD_AssignOne"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="DD_PROJECT"/>
 </launchConfiguration>

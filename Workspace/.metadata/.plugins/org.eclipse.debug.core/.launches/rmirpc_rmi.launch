@@ -13,12 +13,12 @@
 <booleanAttribute key="net.genady.rmi.logRMIEvents" value="false"/>
 <booleanAttribute key="net.genady.rmi.logRMIEvents.noSerialization" value="false"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/DD_AssignOne/src/rmirpc.java"/>
+<listEntry value="/DD_PROJECT/src/WS/rmirpc.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="rmirpc"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="DD_AssignOne"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="WS.rmirpc"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="DD_PROJECT"/>
 </launchConfiguration>

@@ -1,0 +1,4 @@
+
+@WebService
+public interface RpcWs {
+}

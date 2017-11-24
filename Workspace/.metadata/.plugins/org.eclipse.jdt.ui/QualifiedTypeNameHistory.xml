@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-<fullyQualifiedTypeName name="java.rmi.Remote"/>
-<fullyQualifiedTypeName name="java.rmi.registry.LocateRegistry"/>
-<fullyQualifiedTypeName name="java.rmi.Naming"/>
-<fullyQualifiedTypeName name="java.rmi.server.UnicastRemoteObject"/>
-<fullyQualifiedTypeName name="java.rmi.RMISecurityManager"/>
-<fullyQualifiedTypeName name="java.rmi.registry.Registry"/>
-<fullyQualifiedTypeName name="java.rmi.RemoteException"/>
 <fullyQualifiedTypeName name="java.util.Map"/>
 <fullyQualifiedTypeName name="java.util.HashMap"/>
 <fullyQualifiedTypeName name="java.lang.InterruptedException"/>
@@ -21,7 +14,6 @@
 <fullyQualifiedTypeName name="java.rmi.UnknownHostException"/>
 <fullyQualifiedTypeName name="java.io.IOException"/>
 <fullyQualifiedTypeName name="java.lang.System"/>
-<fullyQualifiedTypeName name="central"/>
 <fullyQualifiedTypeName name="java.lang.Exception"/>
 <fullyQualifiedTypeName name="java.util.Random"/>
 <fullyQualifiedTypeName name="java.awt.List"/>
@@ -31,10 +23,41 @@
 <fullyQualifiedTypeName name="adminClient"/>
 <fullyQualifiedTypeName name="java.lang.NumberFormatException"/>
 <fullyQualifiedTypeName name="java.util.ConcurrentModificationException"/>
-<fullyQualifiedTypeName name="java.util.Arrays"/>
-<fullyQualifiedTypeName name="java.lang.Integer"/>
-<fullyQualifiedTypeName name="java.util.ArrayList"/>
-<fullyQualifiedTypeName name="java.io.FileOutputStream"/>
 <fullyQualifiedTypeName name="java.io.PrintStream"/>
 <fullyQualifiedTypeName name="rmiinterface"/>
+<fullyQualifiedTypeName name="java.lang.NegativeArraySizeException"/>
+<fullyQualifiedTypeName name="java.io.FileOutputStream"/>
+<fullyQualifiedTypeName name="java.io.BufferedWriter"/>
+<fullyQualifiedTypeName name="java.io.PrintWriter"/>
+<fullyQualifiedTypeName name="java.time.LocalDate"/>
+<fullyQualifiedTypeName name="java.time.LocalTime"/>
+<fullyQualifiedTypeName name="AppMain"/>
+<fullyQualifiedTypeName name="java.io.FileWriter"/>
+<fullyQualifiedTypeName name="java.io.File"/>
+<fullyQualifiedTypeName name="java.lang.Boolean"/>
+<fullyQualifiedTypeName name="java.util.Scanner"/>
+<fullyQualifiedTypeName name="org.omg.CORBA.LongHolder"/>
+<fullyQualifiedTypeName name="drrs.drrsCorba"/>
+<fullyQualifiedTypeName name="org.omg.PortableInterceptor.ClientRequestInfo"/>
+<fullyQualifiedTypeName name="java.lang.Integer"/>
+<fullyQualifiedTypeName name="org.omg.CORBA.IntHolder"/>
+<fullyQualifiedTypeName name="org.omg.CORBA.StringHolder"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="java.util.StringTokenizer"/>
+<fullyQualifiedTypeName name="java.util.Arrays"/>
+<fullyQualifiedTypeName name="central"/>
+<fullyQualifiedTypeName name="java.net.SocketTimeoutException"/>
+<fullyQualifiedTypeName name="javax.jws.WebService"/>
+<fullyQualifiedTypeName name="javax.jws.soap.SOAPBinding"/>
+<fullyQualifiedTypeName name="javax.jws.soap.SOAPBinding.Style"/>
+<fullyQualifiedTypeName name="rmirpcImpl"/>
+<fullyQualifiedTypeName name="javax.xml.ws.Endpoint"/>
+<fullyQualifiedTypeName name="java.net.URL"/>
+<fullyQualifiedTypeName name="javax.xml.namespace.QName"/>
+<fullyQualifiedTypeName name="java.security.Provider.Service"/>
+<fullyQualifiedTypeName name="javax.xml.ws.Service"/>
+<fullyQualifiedTypeName name="java.lang.Override"/>
+<fullyQualifiedTypeName name="WS.rmirpc"/>
+<fullyQualifiedTypeName name="WS.rmirpcImpl"/>
+<fullyQualifiedTypeName name="WS.wsInter"/>
 </qualifiedTypeNameHistroy>
