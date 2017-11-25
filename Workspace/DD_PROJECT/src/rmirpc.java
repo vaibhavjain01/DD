@@ -34,6 +34,14 @@ public class rmirpc
 	Integer KKLport = central.udpPortKKLRM1;
 	Integer WSTport = central.udpPortWSTRM1;
 	Integer RMport = central.udpPortRM1;
+	central objCentral = new central();
+	
+	RMVJ vjImplDVL = new RMVJ("DVL", objCentral.getUdpPortDVL(), objCentral);
+	RMVJ vjImplKKL = new RMVJ("KKL", objCentral.getUdpPortKKL(), objCentral);
+	RMVJ vjImplWST = new RMVJ("WST", objCentral.getUdpPortWST(), objCentral);
+	
+	RMVJ vjImpl;
+	
 	void createServers()
 	{
 		try
@@ -71,7 +79,7 @@ public class rmirpc
 		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		            serverSocket.receive(receivePacket);
 		            String request = new String(receivePacket.getData());
-		            System.out.println(RMport + " received " + request);
+		            //System.out.println(RMport + " received " + request);
 		            /* CHECK REQUEST and get response*/    
 		            InetAddress IPAddress = receivePacket.getAddress();
 		            int port = receivePacket.getPort();     
@@ -121,10 +129,11 @@ public class rmirpc
 		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		            serverSocket.receive(receivePacket);
 		            String request = new String(receivePacket.getData());
-		            System.out.println(DVLport + " received " + request);
+		            //System.out.println(DVLport + " received " + request);
 		            /* CHECK REQUEST and get response*/    
+		            response = handleUdpRequest(request);
 		            InetAddress IPAddress = receivePacket.getAddress();
-		            int port = receivePacket.getPort();     
+		            int port = central.udpRecvRespRM;     
 	                if(response != null) {
 	                	sendData = response.getBytes();
 	                }
@@ -171,10 +180,11 @@ public class rmirpc
 		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		            serverSocket.receive(receivePacket);
 		            String request = new String(receivePacket.getData());
-		            System.out.println(KKLport + " received " + request);
-		            /* CHECK REQUEST and get response*/    
+		            //System.out.println(KKLport + " received " + request);
+		            /* CHECK REQUEST and get response*/
+		            response = handleUdpRequest(request);
 		            InetAddress IPAddress = receivePacket.getAddress();
-		            int port = receivePacket.getPort();     
+		            int port = central.udpRecvRespRM;     
 	                if(response != null) {
 	                	sendData = response.getBytes();
 	                }
@@ -221,11 +231,11 @@ public class rmirpc
 		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		            serverSocket.receive(receivePacket);
 		            String request = new String(receivePacket.getData());
-		            System.out.println(WSTport + " received " + request);
+		            //System.out.println(WSTport + " received " + request);
 		            /* CHECK REQUEST and get response*/
 		            response = handleUdpRequest(request);
 		            InetAddress IPAddress = receivePacket.getAddress();
-		            int port = receivePacket.getPort();     
+		            int port = central.udpRecvRespRM;     
 	                if(response != null) {
 	                	sendData = response.getBytes();
 	                }
@@ -253,29 +263,96 @@ public class rmirpc
 				}
 	 		}
 		}
-		
-		public String handleUdpRequest(String req)
-		{
-			String reqTokens[] = req.split(";");
-			switch(reqTokens[0])
-			{
-			case "create":
-				break;
-			case "delete":
-				break;
-			case "book":
-				break;
-			case "cancel":
-				break;
-			case "available":
-				break;
-			case "change":
-				break;
-			}
-			return null;
-		}
 	};
-
+	
+	public String handleUdpRequest(String req)
+	{
+		String reqTokens[] = req.split(";");
+		String serverName = reqTokens[1];
+		ArrayList<String> timeSlotsList;
+		int ctr = 0;
+		Integer roomNumber;
+		String strTimeSlots[];
+		central objCentral = new central();
+		Integer intResp = null;
+		String strResp = null;
+		
+		/* Check Server Type */
+		serverName = serverName.substring(0, 3);
+		if(serverName.equals("DVL") == true) {
+			vjImpl = vjImplDVL;
+		}
+		else if(serverName.equals("KKL") == true) {
+			vjImpl = vjImplKKL;
+		}
+		else if(serverName.equals("WST") == true) {
+			vjImpl = vjImplWST;
+		}
+		
+		/* Check Request Type */
+		switch(reqTokens[0])
+		{
+		case "create":
+			ctr = 4;
+			timeSlotsList = new ArrayList<String>();
+			while(true) {
+				if(reqTokens[ctr].substring(0, 2).equals("RM") == false) {
+					timeSlotsList.add(reqTokens[ctr]);
+				}
+				else {
+					break;
+				}
+				ctr++;
+			}
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strTimeSlots = timeSlotsList.toArray(new String[timeSlotsList.size()]);
+			intResp = vjImpl.createRoom(reqTokens[1], roomNumber, reqTokens[3], strTimeSlots);
+			strResp = intResp.toString();
+			break;
+			
+		case "delete":
+			timeSlotsList = new ArrayList<String>();
+			ctr = 4;
+			while(true) {
+				if(reqTokens[ctr].substring(0, 2).equals("RM") == false) {
+					timeSlotsList.add(reqTokens[ctr]);
+				}
+				else {
+					break;
+				}
+				ctr++;
+			}
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strTimeSlots = timeSlotsList.toArray(new String[timeSlotsList.size()]);
+			intResp = vjImpl.deleteRoom(reqTokens[1], roomNumber, reqTokens[3], strTimeSlots);
+			strResp = intResp.toString();
+			break;
+			
+		case "book":
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strResp = vjImpl.bookRoom(reqTokens[1], roomNumber, reqTokens[3], reqTokens[4], reqTokens[5]);
+			break;
+			
+		case "cancel":
+			intResp = vjImpl.cancelBooking(reqTokens[1], reqTokens[2]);
+			strResp = intResp.toString();
+			break;
+			
+		case "available":
+			strResp = vjImpl.getAvailableTimeSlot(reqTokens[1], reqTokens[2]);
+			break;
+			
+		case "change":
+			roomNumber = Integer.parseInt(reqTokens[4]);
+			strResp = vjImpl.changeReservation(reqTokens[1], reqTokens[2], reqTokens[3], roomNumber, 
+					reqTokens[5], reqTokens[6]);
+			break;
+		}
+		
+		System.out.println("Replica Resp: " + strResp);
+		return strResp;
+	};
+	
 	public static void main(String args[])
 	{
 		rmirpc objServerStarter = new rmirpc();

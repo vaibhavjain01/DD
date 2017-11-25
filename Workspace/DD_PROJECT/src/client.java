@@ -38,12 +38,31 @@ public class client
 			else { System.out.println("Room not Created"); }
 			Thread.sleep(3000);
 			
+			drrsImpl.createRoom("KKLA1213", 109, "23-10-1990", a, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
+			drrsImpl.createRoom("WSTA1213", 109, "23-10-1990", a, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
 			drrsImpl.deleteRoom("DVLA1213", 109, "23-10-1990", a, rt);
 			if(rt.value == 0) { System.out.println("Room Deleted"); }
 			else { System.out.println("Room not deleted"); }
 			Thread.sleep(3000);
 			
-			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			//drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
+			System.out.println(outputRt.value);
+			Thread.sleep(3000);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
+			//drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
@@ -52,13 +71,23 @@ public class client
 			String bookingId = outputRt.value;
 			Thread.sleep(3000);
 			
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			System.out.println("Booking: " + outputRt.value);
+			bookingId = outputRt.value;
+			Thread.sleep(3000);
+			
 			drrsImpl.cancelBooking("DVLS1234", "DVLS1234_23-10-1990_109_12:30 - 14:30_KKL", rt);
 			if(rt.value == -1) { System.out.println("Booking Cancellation Failed"); }
 			else { System.out.println("Booking Cancelled"); }
 			Thread.sleep(3000);
+			
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			System.out.println("Booking: " + outputRt.value);
+			bookingId = outputRt.value;
+			Thread.sleep(3000);
 		
 			StringHolder changeResRt = new StringHolder();
-			drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_15:30 - 17:30_KKL", "DVL", 109, "23-10-1990", "15:30 - 17:30", changeResRt);
+			//drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_15:30 - 17:30_KKL", "DVL", 109, "23-10-1990", "15:30 - 17:30", changeResRt);
 		} 
 		catch (Exception e) 
 		{

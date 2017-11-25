@@ -8,6 +8,14 @@ public class central {
 	public static Integer udpPortKKLRM1 = 9853;
 	public static Integer udpPortWSTRM1 = 9854;
 	
+	public Integer availableDVLUdp = 7001;
+	public Integer availableKKLUdp = 7002;
+	public Integer availableWSTUdp = 7003;
+	
+	public Integer crossServerUdpReqDVL = 7853;
+	public Integer crossServerUdpReqKKL = 7753;
+	public Integer crossServerUdpReqWST = 7653;
+	
 	/* mahsa */
 	public static Integer udpPortRM2 = 9751;
 	public static Integer udpPortDVLRM2 = 9752;
@@ -21,6 +29,7 @@ public class central {
 	public static Integer udpPortWSTRM3 = 9654;
 	
 	public static Integer udpPortFE = 9889;
+	public static Integer udpRecvRespRM = 9890;
 	
 	public static drrsCorba frontEndURL = null;
 	
@@ -32,5 +41,46 @@ public class central {
 	public static drrsCorba getFrontEnd()
 	{
 		return frontEndURL;
+	}
+	
+	
+	/* VJ */
+	public Integer getUdpPortKKL() {
+		return availableKKLUdp;
+	}
+	public Integer getUdpPortDVL() {
+		return availableDVLUdp;
+	}
+	public Integer getUdpPortWST() {
+		return availableWSTUdp;
+	}
+	public void setUdpPortDVL(Integer inUdpPort) {
+		availableDVLUdp = inUdpPort;
+	}
+	public void setUdpPortKKL(Integer inUdpPort) {
+		availableKKLUdp = inUdpPort;
+	}
+	public void setUdpPortWST(Integer inUdpPort) {
+		availableWSTUdp = inUdpPort;
+	}
+	
+	/* VJ CROSS SERVER */
+	public Integer getCrossServerUdpPortKKL() {
+		return crossServerUdpReqKKL;
+	}
+	public Integer getCrossServerUdpPortDVL() {
+		return crossServerUdpReqDVL;
+	}
+	public Integer getCrossServerUdpPortWST() {
+		return crossServerUdpReqWST;
+	}
+	public void setCrossServerUdpPortDVL(Integer inUdpPort) {
+		crossServerUdpReqDVL = inUdpPort;
+	}
+	public void setCrossServerUdpPortKKL(Integer inUdpPort) {
+		crossServerUdpReqKKL = inUdpPort;
+	}
+	public void setCrossServerUdpPortWST(Integer inUdpPort) {
+		crossServerUdpReqWST = inUdpPort;
 	}
 }

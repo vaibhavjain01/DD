@@ -144,7 +144,7 @@ public class frontEnd extends drrsCorbaPOA {
 	public void bookRoom(String studentId, int roomNumber, String date, String timeSlot, StringHolder rt,
 			String campusName) {
 		// TODO Auto-generated method stub
-		String req = "book;" + studentId + ";" + Integer.toString(roomNumber) + ";" + date + ";" + timeSlot;
+		String req = "book;" + studentId + ";" + Integer.toString(roomNumber) + ";" + date + ";" + timeSlot + ";" + campusName + ";";
 		addToMsgQueue(req);
 		rt.value = "FAILED";
 	}
@@ -152,7 +152,7 @@ public class frontEnd extends drrsCorbaPOA {
 	@Override
 	public void getAvailableTimeSlot(String studentId, String date, StringHolder rt) {
 		// TODO Auto-generated method stub
-		String req = "available;" + studentId + "_" + date;
+		String req = "available;" + studentId + ";" + date + ";";
 		addToMsgQueue(req);
 		rt.value = "FAILED";
 	}
@@ -160,7 +160,7 @@ public class frontEnd extends drrsCorbaPOA {
 	@Override
 	public void cancelBooking(String studentId, String bookingID, IntHolder rt) {
 		// TODO Auto-generated method stub
-		String req = "cancel;" + studentId + "_" + bookingID + "_";
+		String req = "cancel;" + studentId + ";" + bookingID + ";";
 		addToMsgQueue(req);
 	}
 
@@ -169,7 +169,7 @@ public class frontEnd extends drrsCorbaPOA {
 			String newDate, String newTimeSlot, StringHolder rt) {
 		// TODO Auto-generated method stub
 		String req = "change;" + studentId + ";" + booking_id + ";" + newCampusName + ";" + Integer.toString(newRoomNumber) + ";"
-				+ newDate + ";" + newTimeSlot;
+				+ newDate + ";" + newTimeSlot + ";";
 		addToMsgQueue(req);
 		rt.value = "FAILED";
 	}
@@ -239,12 +239,12 @@ public class frontEnd extends drrsCorbaPOA {
 			 replicaPortThree = central.udpPortWSTRM3;
 		 }
 		 
-		 sendUdpReq(replicaPortOne, req + "RM1");
-		 sendUdpReq(replicaPortTwo, req + "RM2");
-		 sendUdpReq(replicaPortThree, req + "RM3");
-		 sendUdpReq(portRM1, req + "RM1");
-		 sendUdpReq(portRM2, req + "RM2");
-		 sendUdpReq(portRM3, req + "RM3");
+		 sendUdpReq(replicaPortOne, req + "RM1;");
+		 sendUdpReq(replicaPortTwo, req + "RM2;");
+		 sendUdpReq(replicaPortThree, req + "RM3;");
+		 sendUdpReq(portRM1, req + "RM1;");
+		 sendUdpReq(portRM2, req + "RM2;");
+		 sendUdpReq(portRM3, req + "RM3;");
 	  }
 	  
 	  public String sendUdpReq(Integer inServerPort, String req)
@@ -305,6 +305,70 @@ public class frontEnd extends drrsCorbaPOA {
 			  }
 		  }
 		  return null;
+	  }
+	};
+	
+	
+	/* Receive response from replicas */
+	Thread receiveResp = new Thread()
+	{
+		Integer feResponsePort = central.udpRecvRespRM;
+		ArrayList<String> respQueue = new ArrayList<String>();
+		
+	  public void run()
+	  {
+		  DatagramSocket clientSocket = null;
+		  while(true) {
+			  try
+			  {
+				  clientSocket = new DatagramSocket(central.udpRecvRespRM);
+				  InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
+				  byte[] receiveData = new byte[1024];
+				  int i = 0;
+				  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+				  clientSocket.receive(receivePacket);	  
+				  if(receiveData[0] == 0)
+				  {
+					  System.out.println("Invalid Resp");
+					  continue;
+				  }
+				  for(i = 0; i < receiveData.length; i++)
+				  {
+					  if(receiveData[i] == 0)
+					  {
+						  break;
+					  }
+				  }
+				  
+				  receiveData.toString();
+				  String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+				  respQueue.add(response);
+				  System.out.println(response);
+			  }
+			  catch(SocketException e)
+			  {
+				  e.printStackTrace();
+			  }
+			  catch(IOException e)
+			  {
+				  //e.printStackTrace();
+			  }
+			  catch(NegativeArraySizeException e)
+			  {
+				  // Handled
+			  }
+			  catch(Exception e)
+			  {
+				  e.printStackTrace();
+			  }
+			  finally
+			  {
+				  if(clientSocket != null)
+				  {
+					  clientSocket.close();
+				  }
+			  }
+		  }
 	  }
 	};
 }
