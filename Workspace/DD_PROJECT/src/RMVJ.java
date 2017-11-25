@@ -718,7 +718,7 @@ public class RMVJ {
 		    
 		    String sentence = request;
 		    sendData = sentence.getBytes();
-		    System.out.printf("\nForwarding on address %s, port %d\n", IPAddress, inUdpPort);
+		    //System.out.printf("\nForwarding on address %s, port %d\n", IPAddress, inUdpPort);
 		    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inUdpPort);
 		    clientSocket.send(sendPacket);
 		    
@@ -1304,7 +1304,7 @@ public class RMVJ {
 		
 		System.out.println("Change RES: Change request received: ");
 		System.out.println("Change RES: Old booking: " + bookingID);
-		System.out.println("Change RES: New booking: " + newCampusName + "_" + newRoomNumber + "_" + newDate + "_" + newTimeSlot);
+		System.out.println("Change RES: New booking: " + studentId + "_" + newDate + "_" + newRoomNumber + "_" + newTimeSlot + "_" + newCampusName);
 		
 		try
 		{

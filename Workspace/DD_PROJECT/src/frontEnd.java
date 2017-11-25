@@ -342,8 +342,8 @@ public class frontEnd extends drrsCorbaPOA {
 				  
 				  receiveData.toString();
 				  String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
-				  respQueue.add(response);
 				  System.out.println(response);
+				  respQueue.add(response);
 			  }
 			  catch(SocketException e)
 			  {
