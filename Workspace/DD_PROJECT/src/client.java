@@ -87,7 +87,13 @@ public class client
 			Thread.sleep(3000);
 		
 			StringHolder changeResRt = new StringHolder();
-			//drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_15:30 - 17:30_KKL", "DVL", 109, "23-10-1990", "15:30 - 17:30", changeResRt);
+			drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_12:30 - 14:30_KKL", 
+					"WST", 109, "23-10-1990", "15:30 - 17:30", changeResRt);
+			
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			System.out.println("Booking: " + outputRt.value);
+			bookingId = outputRt.value;
+			Thread.sleep(3000);
 		} 
 		catch (Exception e) 
 		{
