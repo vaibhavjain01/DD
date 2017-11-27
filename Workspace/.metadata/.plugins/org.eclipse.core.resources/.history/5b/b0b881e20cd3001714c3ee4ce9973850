@@ -1,0 +1,337 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.logging.Logger;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+
+public class User {
+	public String User_Name ; 
+	public String Password; 
+	public int Booked_Rooms;
+	
+	public static String BookRoom(String StudentId ,String campusName , String date , String roomNumber, String timeslot){
+		if (campusName.equals("DVL")){
+		HashMap maprooms=((HashMap)Globals.db.get(date));
+		HashMap maptimes=((HashMap)maprooms.get(roomNumber));
+		if (maptimes==null){
+			Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:RoomNotFound!");
+			Logger.getLogger(StudentId).info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:RoomNotFound!");
+			
+			return "Error:RoomNotFound!";
+		}
+		DailyTime timev=( (DailyTime)maptimes.get(timeslot));
+		
+		System.out.println("*********************************"+timev.Booked_By);
+		if (timev.Booked_By!=null && timev.Booked_By!= ""){
+			Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:The room is not available!");
+			Logger.getLogger(StudentId).info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:The room is not available!");
+			
+			return "Error:The room is not available!";
+		}
+		User user =Globals.users.get(StudentId);
+		if (user==null){
+			Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:UserNotFound!");
+			Logger.getLogger(StudentId).info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:UserNotFound!");
+			return "Error:UserNotFound!";
+		}
+		
+		if (user.Booked_Rooms>=3){
+			Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:Your reservations are full!");
+			Logger.getLogger(StudentId).info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Error:Your reservations are full!");
+			return "Error:Your reservations are full!";
+		}
+		//(String studentId, String date, Integer
+		//roomNumber, String timeSlot, String serverName)
+		
+		timev.Booked_By=StudentId;
+		
+		timev.Book_Id = Globals.genBookingId(StudentId,date,roomNumber,timeslot,campusName);
+		maptimes.put(timeslot, timev);
+		user.Booked_Rooms++;
+		Globals.users.put(StudentId,user);
+		
+		Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Success:"+timev.Book_Id);
+		Logger.getLogger(StudentId).info("Params:"+StudentId+" "+ campusName+" "+date+" "+ roomNumber+" "+timeslot+";Success:"+timev.Book_Id);
+		return timev.Book_Id;
+		}else{
+			String msg ="book;"+StudentId+";"+roomNumber+";"+date+";"+timeslot+";"+campusName+";";
+			String strReply=MakeUDPReqist(msg, campusName);
+			return strReply;
+		}
+	}
+	
+	public static Integer GetCurrentServerTimeSlot(String date){
+		HashMap maprooms=((HashMap)Globals.db.get(date));
+		
+	    Integer	totalCount =0;
+		for (Object key : maprooms.keySet()) {
+			 String roomnumber=(String)key;
+			
+			 	HashMap times=((HashMap)maprooms.get(roomnumber));
+			 	for (Object key1 : times.keySet()) {
+			 		 String timek=(String)key1;
+			 		 
+			 		DailyTime timev=	( (DailyTime) times.get(timek));
+			
+			       
+					if (timev.Booked_By==null ||timev.Booked_By==""){
+						totalCount++;
+					}
+				
+			 	}
+			}
+		
+
+		Logger.getLogger("GlobalLogs").info("Params:"+date+" "+";Success:"+totalCount);
+		
+		return totalCount;
+	}
+	
+	
+	private static Integer GetTimeSlotCount(String Server,String date){
+
+		DatagramSocket socket =null;
+		try {
+			socket= new DatagramSocket();
+			String msg ="current;;"+date+";";
+			
+			byte[] msgByte = msg.getBytes();
+			InetAddress host = InetAddress.getByName("localhost");
+			int port =  0;
+			if (Server =="KKL"){
+				port = Globals.KKL_UDP_Port;
+			}else if (Server =="WST"){
+				port = Globals.WST_UDP_Port;
+			}else if (Server =="DVL"){
+				port = Globals.DVL_UDP_Port;
+			}
+			
+		
+			DatagramPacket request = new DatagramPacket(msgByte,msgByte.length,host,port);
+			socket.send(request);
+			
+			byte[] buffer=new byte[1000];
+			DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+			socket.receive(reply);
+			
+			
+			 String strReply = new String(reply.getData());
+			
+			strReply = strReply.split(";")[0];
+		
+			Integer r= Integer.parseInt(strReply);
+			return r;
+			
+		}	
+		catch (SocketException e) {
+			// TODO Auto-generated catch block
+
+			System.out.println("error in socket:"+e.getMessage());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("error in io:"+e.getMessage());
+		} finally{
+			if (socket!=null){socket.close();}
+		}
+		return 0;
+	}
+	public static String GetAvailableTimeSlot(String date){
+
+		return "DVL:"+GetCurrentServerTimeSlot(date)+" KKL:"+GetTimeSlotCount("KKL",date)+" WST:"+GetTimeSlotCount("WST",date);
+	}
+	
+	private static String MakeUDPReqist(String msg,String ServerName ){
+		 String strReply="";
+			DatagramSocket socket =null;
+			try {
+				socket= new DatagramSocket();
+		
+				InetAddress host = InetAddress.getByName("localhost");
+				int port =  0;
+				if (ServerName.equals("KKL")){
+					port = Globals.KKL_UDP_Port;
+				}else if (ServerName.equals("WST")){
+					port = Globals.WST_UDP_Port;
+				}else if (ServerName.equals("DVL")){
+					port = Globals.DVL_UDP_Port;
+				}
+				
+			
+				 byte[] msgByte = msg.getBytes();
+				DatagramPacket request = new DatagramPacket(msgByte,msgByte.length,host,port);
+				socket.send(request);
+				
+				byte[] buffer=new byte[1000];
+				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+				socket.receive(reply);
+				
+				
+				strReply = new String(reply.getData());
+				
+				strReply = strReply.split(";")[0];
+			
+				
+				
+				
+			}
+			catch (SocketException e) {
+				// TODO Auto-generated catch block
+
+				System.out.println("error in socket:"+e.getMessage());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("error in io:"+e.getMessage());
+			} finally{
+				if (socket!=null){
+					socket.close();
+				}
+				return strReply;
+			}
+	}
+	
+	
+	public static String ChangeReservation(String UserId,String bookingID,String NewServer,String date, String New_Room,String New_TimeSlot){
+		System.out.println(" *****************8888*******"+NewServer);
+		String strReply="";
+		String msg="";
+		if (NewServer.equals("DVL")){
+			strReply = BookRoom(UserId, "DVL", date, New_Room, New_TimeSlot);
+		}else
+		{
+			System.out.println("jhey************************"+strReply);
+			 msg ="book;"+UserId+";"+New_Room+";"+date+";"+New_TimeSlot+";"+NewServer+";";
+		 strReply=MakeUDPReqist(msg, NewServer);
+		}
+		//successful booking ...> cancel booking on other server
+				
+		System.out.println("before cancel************************"+strReply);
+				if (strReply.startsWith("DVL")  || strReply.startsWith("KKL")  || strReply.startsWith("WST")){
+					System.out.println("cancel************************"+strReply);
+					String cancel_result ;
+					if (bookingID.endsWith("DVL") ){
+						cancel_result= CancelBooking(UserId, bookingID);
+						if (cancel_result !="Successful"){
+							return "Error_Cancel";
+						}
+					}
+					if (bookingID.endsWith("KKL") || bookingID.endsWith("WST")){
+						 msg ="cancel;"+UserId+";"+bookingID+";";
+						 String Server="";
+						if( bookingID.endsWith("KKL") ){
+							Server="KKL";
+						}
+						if( bookingID.endsWith("WST")){
+							Server="WST";
+						}
+						String strReply1=MakeUDPReqist(msg, Server);
+						
+						
+						if (!strReply1.equals("Successful")){
+							return "Error_Cancel";
+						}
+					}
+				}
+
+		return strReply;
+		
+	}
+	
+	public static String  CancelBooking(String StudentId,String bookingID){
+
+	    Integer	totalCount =0;
+		for (Object k : Globals.db.keySet()) {
+			String daten =(String)k;
+			HashMap maprooms=((HashMap)Globals.db.get(daten));
+		for (Object key : maprooms.keySet()) {
+			 String roomnumber=(String)key;
+			
+			 	HashMap times=((HashMap)maprooms.get(roomnumber));
+			 	for (Object key1 : times.keySet()) {
+			 		 String timek=(String)key1;
+			 		 
+			 		DailyTime timev=	( (DailyTime) times.get(timek));
+			
+			       System.out.println("*****test2****"+timev.Book_Id);
+			 		if (timev.Book_Id!=null  && timev.Book_Id.equals( bookingID )){
+			 			 System.out.println("*****test3****"+timev.Book_Id);
+						if (!timev.Booked_By.equals(StudentId)){
+							Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+bookingID+";Error:DeniedAccess");
+							return "DeniedAccess";
+						}
+						timev.Booked_By=null;
+						timev.Book_Id = null;
+						Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+bookingID+";Successful");
+						return "Successful";
+					}
+				
+			 	}
+			}
+		}
+		Logger.getLogger("GlobalLogs").info("Params:"+StudentId+" "+bookingID+";Error:NotFound");
+		Logger.getLogger(StudentId).info("Params:"+StudentId+" "+bookingID+";Error:NotFound");
+		return "NotFound";
+	}
+	
+	public static String DeleteRoom(String UserId ,String date,String roomNumber){
+		HashMap maprooms =((HashMap)Globals.db.get(date));
+		
+		HashMap times =((HashMap)maprooms.get(roomNumber));
+		if (times == null){
+			Logger.getLogger("GlobalLogs").info("Params:"+date+" "+roomNumber+";Error:RoomNotFound");
+			Logger.getLogger(UserId).info("Params:"+date+" "+roomNumber+";Error:RoomNotFound");
+			return "Error:RoomNotFound";
+		}
+		for (Object key : times.keySet()) {	
+			String timek=(String)key;
+		 	DailyTime timev=	( (DailyTime) times.get(timek));
+			if (timev.Booked_By!=null && timev.Booked_By!=""){
+				User user =Globals.users.get(timev.Booked_By);
+				user.Booked_Rooms--;
+				Globals.users.put(timev.Booked_By,user);
+
+			}
+		}		
+		maprooms.remove(roomNumber);
+		Logger.getLogger("GlobalLogs").info("Params:"+date+" "+roomNumber+";SuccessfullyRemoved");
+		Logger.getLogger(UserId).info("Params:"+date+" "+roomNumber+";SuccessfullyRemoved");
+		return "Successfull";
+	}
+	
+public static String CreateRoom(String UserId ,String date,String roomNumber, HashMap timeSlots){
+		HashMap maprooms =((HashMap)Globals.db.get(date));
+		boolean roomExists = false;
+		for (Object key : maprooms.keySet()) {
+			 	if (((String)key).equals( roomNumber)){
+			 		roomExists = true;
+			 	}
+		}
+		if (!roomExists){
+			maprooms.put(roomNumber, timeSlots);
+		}else{
+			HashMap times =((ArrayList<String>)maprooms.get(roomNumber));
+			
+	              for (int i=0;i<timeSlots.size();i++){
+					boolean timeExists=false;
+				 
+			
+					 for (int j=0;j<times.size();j++){
+					 	if (timeSlots.get(i) ==times.get(j)){
+					 		timeExists = true;
+					 	}
+				}
+				if (!timeExists){
+					times.add(timeSlots.get(i));
+				}
+			 }
+		}
+		
+		Logger.getLogger("GlobalLogs").info("Params:"+date+" "+roomNumber+";SuccessfullyAdded");
+		Logger.getLogger(UserId).info("Params:"+date+" "+roomNumber+";SuccessfullyAdded");
+		return "OK";
+	}
+}
+
+

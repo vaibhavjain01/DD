@@ -1,0 +1,101 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+
+public class UDPThread implements Runnable{
+	public void run(){
+		 DatagramSocket socket =null;
+			try {
+				socket= new DatagramSocket(Globals.DVL_UDP_Port);
+				byte[] buffer=new byte[1000];
+				while(true){
+					DatagramPacket request = new DatagramPacket(buffer,buffer.length);
+					
+					socket.receive(request);
+					String s = new String(request.getData());
+					
+					System.out.println("udp request is"+s);
+					String strres="";
+					if (s.contains("create;") ){
+						String student_Id = s.split(";")[1];
+						String roomNumber = s.split(";")[2];
+						String date = s.split(";")[3];
+						
+						ArrayList<String> new_times=new ArrayList<String>();
+							
+						 for (int i=4;i<s.split(";").length;i++){
+							 new_times.add( s.split(";")[i]);
+						 }
+						
+							
+						strres =User.CreateRoom(student_Id, date, roomNumber,new_times) ;
+						
+					}
+					
+					if (s.contains("delete;") ){
+						String student_Id = s.split(";")[1];
+						String roomNumber = s.split(";")[2];
+						String date = s.split(";")[3];
+						strres =User.DeleteRoom(student_Id, date, roomNumber) ;
+						
+					}
+					
+					if (s.contains("cancel;")){	
+						String student_Id = s.split(";")[1];
+						String booking_id = s.split(";")[2];
+						strres =User.CancelBooking(student_Id,booking_id) +";";
+					}
+
+					if (s.contains("available;")){	
+						String student_Id = s.split(";")[1];
+						String date = s.split(";")[2];
+						strres =User.GetAvailableTimeSlot(date)+";";
+					}
+					if (s.contains("current;")){	
+						String student_Id = s.split(";")[1];
+						String date = s.split(";")[2];
+						strres =User.GetCurrentServerTimeSlot(date)+";";
+					}
+					if (s.contains("book;")){
+						String student_Id = s.split(";")[1];
+						String roomNumber = s.split(";")[2];
+						String date = s.split(";")[3];
+						String timeslot = s.split(";")[4];
+						String campus = s.split(";")[5];
+						strres =User.BookRoom(student_Id,campus,date,roomNumber,timeslot)+";" ;
+					}
+					
+					if (s.contains("change;")){
+			
+						String student_Id = s.split(";")[1];
+						String booking_Id = s.split(";")[2];
+						String newCampusName = s.split(";")[3];
+						String newRoomNumber = s.split(";")[4];
+						String newDate = s.split(";")[5];
+						String newTimeSlot = s.split(";")[6];
+	
+						strres =User.ChangeReservation(student_Id,booking_Id,newCampusName,newDate,newRoomNumber,newTimeSlot)+";" ;
+					}
+				
+					DatagramPacket reply = new DatagramPacket(strres.getBytes(), strres.length(),request.getAddress(), );
+					socket.send(reply);
+					
+				}
+			}	
+			catch (SocketException e) {
+				// TODO Auto-generated catch block
+				System.out.println("error in socket:"+e.getMessage());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("error in io:"+e.getMessage());
+			} finally{
+				if (socket!=null){socket.close();}
+			}
+			System.out.println("upd is listening.........");
+	}
+
+}

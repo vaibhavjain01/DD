@@ -16,11 +16,15 @@ public class central {
 	public Integer crossServerUdpReqKKL = 7753;
 	public Integer crossServerUdpReqWST = 7653;
 	
+	
+	
 	/* mahsa */
 	public static Integer udpPortRM2 = 9751;
-	public static Integer udpPortDVLRM2 = 9752;
-	public static Integer udpPortKKLRM2 = 9753;
-	public static Integer udpPortWSTRM2 = 9754;
+	public static Integer udpPortDVLRM2 = 6000;
+	public static Integer udpPortKKLRM2 = 6001;
+	public static Integer udpPortWSTRM2 = 6002;
+	
+	
 	
 	/* somayeh */
 	public static Integer udpPortRM3 = 9651;

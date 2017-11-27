@@ -1,0 +1,57 @@
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+
+
+public class CorbaFuncs {
+
+	
+	public String GetAvailableTimeSlot(String UserId ,String date){
+
+	    User  u =new User();
+	   return u.GetAvailableTimeSlot(date);
+	}
+
+	public synchronized String BookRoom(String UserId ,String campusName , String date , String roomNumber, String timeslot)
+	{
+
+	    User  u =new User();
+		return	u.BookRoom(UserId, campusName, date, roomNumber, timeslot);
+	}
+
+	public synchronized String  CancelBooking(String UserId,String bookingID){
+
+	    User  u =new User();
+	  return  u.CancelBooking(UserId, bookingID);
+	}
+ 
+	public synchronized String ChangeReservation(String UserId,String bookingID,String NewServer,String date,String New_Room,String New_TimeSlot){
+		
+
+		    User  u =new User();
+			return	u.ChangeReservation(UserId, bookingID, NewServer,date, New_Room, New_TimeSlot);
+		
+	}
+	
+	public synchronized String DeleteRoom(String UserId,String date,String roomNumber){
+
+	    User  u =new User();
+	   return  u.DeleteRoom(UserId,date, roomNumber);
+	  
+	}
+	public synchronized String CreateRoom(String UserId,String date,String roomNumber, String timeSlots){
+	    User  u =new User();
+	    HashMap new_times=new HashMap();
+		new_times.add( timeSlots);
+	    return u.CreateRoom(UserId,date, roomNumber, new_times);
+	   
+	}
+
+
+	public void ResetData(){
+		 Globals.db=null;
+		 Globals.users=null;
+		 Main.FillData();
+	}
+}

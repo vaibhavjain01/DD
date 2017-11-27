@@ -1,0 +1,359 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.*;
+import java.rmi.server.UnicastRemoteObject;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+
+/* REPLICA MANAGER */
+public class rmirpc
+{
+	Integer DVLport = central.udpPortDVLRM1;
+	Integer KKLport = central.udpPortKKLRM1;
+	Integer WSTport = central.udpPortWSTRM1;
+	Integer RMport = central.udpPortRM1;
+	central objCentral = new central();
+	
+	RMVJ vjImplDVL = new RMVJ("DVL", objCentral.getUdpPortDVL(), objCentral);
+	RMVJ vjImplKKL = new RMVJ("KKL", objCentral.getUdpPortKKL(), objCentral);
+	RMVJ vjImplWST = new RMVJ("WST", objCentral.getUdpPortWST(), objCentral);
+	RMVJ vjImpl;
+	
+	void createServers()
+	{
+		try
+		{
+			dvlServer.start();
+			kklServer.start();
+			wstServer.start();
+			replicaManager.start();
+		    System.out.println("Servers are ready and waiting ...");
+		}
+		catch(Exception e)
+		{
+			System.err.println("ERROR: " + e);
+			e.printStackTrace();
+		}
+		
+		System.out.println("Servers Exiting ...");
+	}
+	
+	Thread replicaManager = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(RMport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            //System.out.println(RMport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread dvlServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(DVLport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            //System.out.println(DVLport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            response = handleUdpRequest(request);
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = central.udpRecvRespRM;     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread kklServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(KKLport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            //System.out.println(KKLport + " received " + request);
+		            /* CHECK REQUEST and get response*/
+		            response = handleUdpRequest(request);
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = central.udpRecvRespRM;     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	Thread wstServer = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(WSTport);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            //System.out.println(WSTport + " received " + request);
+		            /* CHECK REQUEST and get response*/
+		            response = handleUdpRequest(request);
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = central.udpRecvRespRM;     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	public String handleUdpRequest(String req)
+	{
+		String reqTokens[] = req.split(";");
+		String serverName = reqTokens[1];
+		ArrayList<String> timeSlotsList;
+		int ctr = 0;
+		Integer roomNumber;
+		String strTimeSlots[];
+		central objCentral = new central();
+		Integer intResp = null;
+		String strResp = null;
+		
+		/* Check Server Type */
+		serverName = serverName.substring(0, 3);
+		if(serverName.equals("DVL") == true) {
+			vjImpl = vjImplDVL;
+		}
+		else if(serverName.equals("KKL") == true) {
+			vjImpl = vjImplKKL;
+		}
+		else if(serverName.equals("WST") == true) {
+			vjImpl = vjImplWST;
+		}
+		
+		/* Check Request Type */
+		switch(reqTokens[0])
+		{
+		case "create":
+			ctr = 4;
+			timeSlotsList = new ArrayList<String>();
+			while(true) {
+				if(reqTokens[ctr].substring(0, 2).equals("RM") == false) {
+					timeSlotsList.add(reqTokens[ctr]);
+				}
+				else {
+					break;
+				}
+				ctr++;
+			}
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strTimeSlots = timeSlotsList.toArray(new String[timeSlotsList.size()]);
+			intResp = vjImpl.createRoom(reqTokens[1], roomNumber, reqTokens[3], strTimeSlots);
+			strResp = intResp.toString();
+			break;
+			
+		case "delete":
+			timeSlotsList = new ArrayList<String>();
+			ctr = 4;
+			while(true) {
+				if(reqTokens[ctr].substring(0, 2).equals("RM") == false) {
+					timeSlotsList.add(reqTokens[ctr]);
+				}
+				else {
+					break;
+				}
+				ctr++;
+			}
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strTimeSlots = timeSlotsList.toArray(new String[timeSlotsList.size()]);
+			intResp = vjImpl.deleteRoom(reqTokens[1], roomNumber, reqTokens[3], strTimeSlots);
+			strResp = intResp.toString();
+			break;
+			
+		case "book":
+			roomNumber = Integer.parseInt(reqTokens[2]);
+			strResp = vjImpl.bookRoom(reqTokens[1], roomNumber, reqTokens[3], reqTokens[4], reqTokens[5]);
+			break;
+			
+		case "cancel":
+			intResp = vjImpl.cancelBooking(reqTokens[1], reqTokens[2]);
+			strResp = intResp.toString();
+			break;
+			
+		case "available":
+			strResp = vjImpl.getAvailableTimeSlot(reqTokens[1], reqTokens[2]);
+			break;
+			
+		case "change":
+			roomNumber = Integer.parseInt(reqTokens[4]);
+			strResp = vjImpl.changeReservation(reqTokens[1], reqTokens[2], reqTokens[3], roomNumber, 
+					reqTokens[5], reqTokens[6]);
+			break;
+		}
+		
+		System.out.println("Replica Resp: " + strResp);
+		return strResp;
+	};
+	
+	public static void main(String args[])
+	{
+		rmirpc objServerStarter = new rmirpc();
+		objServerStarter.createServers();
+	}
+}

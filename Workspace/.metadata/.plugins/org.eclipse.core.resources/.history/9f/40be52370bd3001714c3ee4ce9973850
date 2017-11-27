@@ -1,0 +1,182 @@
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+
+
+public class Main {
+	
+	public static void FillData(){
+		//fill out the rooms information start
+
+		HashMap times1=new HashMap();
+		times1.put("0700-0900",new DailyTime("0700-0900"));
+		times1.put("0900-1100", new DailyTime("0900-1100"));
+		times1.put("1100-1300", new DailyTime("1100-1300"));
+		
+		HashMap times2=new HashMap();
+		times2.put("0700-0900",new DailyTime("0700-0900"));
+		times2.put("0900-1100", new DailyTime("0900-1100"));
+		times2.put("1100-1300", new DailyTime("1100-1300"));
+		
+		HashMap times3=new HashMap();
+		times3.put("0700-0900",new DailyTime("0700-0900"));
+		times3.put("0900-1100", new DailyTime("0900-1100"));
+		times3.put("1100-1300", new DailyTime("1100-1300"));
+	
+		HashMap times4=new HashMap();
+		times4.put("0700-0900",new DailyTime("0700-0900"));
+		times4.put("0900-1100", new DailyTime("0900-1100"));
+		times4.put("1100-1300", new DailyTime("1100-1300"));
+	
+	
+		
+		HashMap times5=new HashMap();
+		times5.put("0700-0900",new DailyTime("0700-0900"));
+		times5.put("0900-1100", new DailyTime("0900-1100"));
+		times5.put("1100-1300", new DailyTime("1100-1300"));
+		
+		HashMap times6=new HashMap();
+		times6.put("0700-0900",new DailyTime("0700-0900"));
+		times6.put("0900-1100", new DailyTime("0900-1100"));
+		times6.put("1100-1300", new DailyTime("1100-1300"));
+		
+		
+		HashMap times7=new HashMap();
+		times7.put("0700-0900",new DailyTime("0700-0900"));
+		times7.put("0900-1100", new DailyTime("0900-1100"));
+		times7.put("1100-1300", new DailyTime("1100-1300"));
+		
+		HashMap times8=new HashMap();
+		times8.put("0700-0900",new DailyTime("0700-0900"));
+		times8.put("0900-1100", new DailyTime("0900-1100"));
+		times8.put("1100-1300", new DailyTime("1100-1300"));
+		
+		HashMap times9=new HashMap();
+		times9.put("0700-0900",new DailyTime("0700-0900"));
+		times9.put("0900-1100", new DailyTime("0900-1100"));
+		times9.put("1100-1300", new DailyTime("1100-1300"));
+	
+		
+		HashMap rooms1= new HashMap();
+		rooms1.put("RR10001",times1);
+		rooms1.put("RR10002",times2);
+		rooms1.put("RR10003",times3);
+	
+		
+		HashMap rooms2= new HashMap();
+		rooms2.put("509",times4);
+//		rooms2.put("RR10002",times5);
+//		rooms2.put("RR10003",times6);
+
+		
+		HashMap rooms3= new HashMap();
+		rooms3.put("RR10001",times7);
+		rooms3.put("RR10002",times8);
+		rooms3.put("RR10003",times9);
+		
+		  Globals.db = new HashMap();
+		
+//		  Globals.db.put("2017-10-01", rooms1);
+		  Globals.db.put("2017-07-11",rooms2);
+//		  Globals.db.put("2017-10-03", rooms3);
+		//fill out the rooms information end 
+		 
+		 
+		  Globals.users = new HashMap<String,User>();
+		 
+		//fill out users information start
+			//fill out users information start
+			 User student1111 = new User();
+			 student1111.User_Name = "DVLS1111";
+			 student1111.Password = "123456";
+			 Globals.users.put("DVLS1111", student1111);
+			 LoggerSet("DVLS1111","Logs/DVLS1111.log");
+			 
+			 User student2222 = new User();
+			 student2222.User_Name = "DVLS2222";
+			 student2222.Password = "123456";
+			 Globals.users.put("DVLS2222", student2222);
+			 LoggerSet("DVLS2222","Logs/DVLS2222.log");
+			 
+			 User admin1111 = new User();
+			 admin1111.User_Name = "DVLA1111";
+			 admin1111.Password = "123456";
+			 Globals.users.put("DVLA1111", admin1111);
+			 LoggerSet("DVLA1111","Logs/DVLA1111.log");
+			 
+				//fill out users information start
+			 User studentk1111 = new User();
+			 studentk1111.User_Name = "KKLS1111";
+			 studentk1111.Password = "123456";
+			 Globals.users.put("KKLS1111", studentk1111);
+			 LoggerSet("KKLS1111","Logs/KKLS1111.log");
+			 
+			 User studentk2222 = new User();
+			 studentk2222.User_Name = "KKLS2222";
+			 studentk2222.Password = "123456";
+			 Globals.users.put("KKLS2222", studentk2222);
+			 LoggerSet("KKLS2222","Logs/KKLS2222.log");
+			 
+			 User admink1111 = new User();
+			 admink1111.User_Name = "KKLA1111";
+			 admink1111.Password = "123456";
+			 Globals.users.put("KKLA1111", admink1111);
+			 LoggerSet("KKLA1111","Logs/KKLA1111.log");
+			 
+			 User studentw1111 = new User();
+			 studentw1111.User_Name = "WSTS1111";
+			 studentw1111.Password = "123456";
+			 Globals.users.put("WSTS1111", studentw1111);
+			 LoggerSet("WSTS1111","Logs/WSTS1111.log");
+			 
+			 User studentw2222 = new User();
+			 studentw2222.User_Name = "WSTS2222";
+			 studentw2222.Password = "123456";
+			 Globals.users.put("WSTS2222", studentw2222);
+			 LoggerSet("WSTS2222","Logs/WSTS2222.log");
+			 
+			 User adminw1111 = new User();
+			 adminw1111.User_Name = "WSTA1111";
+			 adminw1111.Password = "123456";
+			 Globals.users.put("WSTA1111", adminw1111);
+			 LoggerSet("WSTA1111","Logs/WSTA1111.log");
+		//fill out users information end
+	}
+	
+	public static void LoggerSet(String Name, String address ){
+	    FileHandler fh;  
+
+	    try {  	        
+	        fh = new FileHandler(address);  
+	        Logger.getLogger(Name).addHandler(fh);
+	    
+	    } catch (SecurityException e) {  
+	        e.printStackTrace();  
+	    } catch (IOException e) {  
+	        e.printStackTrace();  
+	    }  
+	}
+
+	
+	public static void main(String[] args){
+		
+		new File("Logs").mkdir();
+		FillData();
+	
+		LoggerSet("GlobalLogs","Logs/GlobalLogFile.log");
+
+		
+
+	
+		UDPThread ut1 = new UDPThread();
+		Thread t = new Thread(ut1);
+		t.start();
+		
+		
+	}
+	
+	
+
+}

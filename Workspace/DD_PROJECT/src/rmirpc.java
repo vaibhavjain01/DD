@@ -39,8 +39,13 @@ public class rmirpc
 	RMVJ vjImplDVL = new RMVJ("DVL", objCentral.getUdpPortDVL(), objCentral);
 	RMVJ vjImplKKL = new RMVJ("KKL", objCentral.getUdpPortKKL(), objCentral);
 	RMVJ vjImplWST = new RMVJ("WST", objCentral.getUdpPortWST(), objCentral);
-	
 	RMVJ vjImpl;
+	
+	/* MAHSA PORTS */
+	Integer DVLport2 = central.udpPortDVLRM2;
+	Integer KKLport2 = central.udpPortKKLRM2;
+	Integer WSTport2 = central.udpPortWSTRM2;
+	Integer RMport2 = central.udpPortRM2;
 	
 	void createServers()
 	{
@@ -50,7 +55,6 @@ public class rmirpc
 			kklServer.start();
 			wstServer.start();
 			replicaManager.start();
-		    //rmirpcImpl objRmirpcImplDVL = new rmirpcImpl("DVL", DVLport, objCentral);
 		    System.out.println("Servers are ready and waiting ...");
 		}
 		catch(Exception e)
@@ -353,9 +357,71 @@ public class rmirpc
 		return strResp;
 	};
 	
+	
+	/* MAHSA */
+	Thread replicaManagerMahsa = new Thread()
+	{
+		public void run()
+		{
+			DatagramSocket serverSocket = null;
+			String response = null;
+			try
+			{
+				byte[] receiveData = new byte[1024];
+			    byte[] sendData = new byte[1024];
+			    
+			    while(true)
+		        {
+			    	serverSocket = new DatagramSocket(RMport2);
+		            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		            serverSocket.receive(receivePacket);
+		            String request = new String(receivePacket.getData());
+		            //System.out.println(RMport + " received " + request);
+		            /* CHECK REQUEST and get response*/    
+		            InetAddress IPAddress = receivePacket.getAddress();
+		            int port = receivePacket.getPort();     
+	                if(response != null) {
+	                	sendData = response.getBytes();
+	                }
+	                else {
+	                	sendData = "FAILED".getBytes();
+	                }
+	                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	                serverSocket.send(sendPacket);
+	                serverSocket.close();    
+		        }
+			}
+			catch(SocketException e)
+			{
+				e.printStackTrace();
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			finally
+	 		{
+				if(serverSocket != null)
+				{
+					serverSocket.close();
+				}
+	 		}
+		}
+	};
+	
+	public void createServersMahsa() {
+		
+	}
+	
+	public void createServersSomayeh() {
+		
+	}
+	
 	public static void main(String args[])
 	{
 		rmirpc objServerStarter = new rmirpc();
 		objServerStarter.createServers();
+		objServerStarter.createServersMahsa();
+		objServerStarter.createServersSomayeh();
 	}
 }

@@ -2,27 +2,27 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="" key="selection"/>
+		<item value="receiveResp" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
-		<item value="true" key="wholeword"/>
+		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="timeslot deleted"/>
-			<item value="timeslot successfully"/>
-			<item value="delete"/>
-			<item value="public"/>
-			<item value="create"/>
-			<item value="return"/>
-			<item value="sleep"/>
-			<item value="udpPort"/>
-			<item value="udpPortFE"/>
-			<item value="trace"/>
-			<item value="frontEnd"/>
-			<item value="BookingCounter"/>
-			<item value="resetCounter"/>
-			<item value="reset"/>
-			<item value="Sending on"/>
+			<item value="receiveResp"/>
+			<item value="handleUdpRequest"/>
+			<item value="Forwarding"/>
+			<item value="No such booking record with provided bookin"/>
+			<item value="New booking"/>
+			<item value="orw"/>
+			<item value="inUdpPort++"/>
+			<item value="while"/>
+			<item value="roomBookForwarder"/>
+			<item value="ROOMBOOK"/>
+			<item value="Unauthenticated Request Discarded"/>
+			<item value="cenRepoObj"/>
+			<item value="setKKLServer"/>
+			<item value="9852"/>
+			<item value="setUdpPortKKL"/>
 		</list>
 		<list key="replacehistory">
 			<item value="System.out.println"/>
@@ -32,7 +32,7 @@
 		<item value="336" key="DIALOG_WIDTH"/>
 		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
 		<item value="454" key="DIALOG_HEIGHT"/>
-		<item value="1496" key="DIALOG_X_ORIGIN"/>
-		<item value="91" key="DIALOG_Y_ORIGIN"/>
+		<item value="1561" key="DIALOG_X_ORIGIN"/>
+		<item value="170" key="DIALOG_Y_ORIGIN"/>
 	</section>
 </section>

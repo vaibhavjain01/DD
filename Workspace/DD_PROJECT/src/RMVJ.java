@@ -194,6 +194,7 @@ public class RMVJ {
 		         byte[] sendData = new byte[1024];
 		         Integer serverPort = 0;
 		         
+		         /* Ports from central */
 		         if(serverName.equals("DVL") == true)
 		         {
 		        	 serverPort = cenRepoObj.getCrossServerUdpPortDVL();
