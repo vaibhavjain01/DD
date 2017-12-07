@@ -29,11 +29,30 @@ public class client
 			drrsImpl = drrsCorbaHelper.narrow(ncRef.resolve_str(name));
 			
 			System.out.println("Obtained a handle on server object: " + drrsImpl);
-			String a[] = {"12:30 - 14:30", "15:30 - 17:30", "18:30 - 20:30", "21:30 - 23:30"};
+			String a[] = {"12:30-14:30", "15:30-17:30", "18:30-20:30", "21:30-23:30"};
+			String b[] = {"12:35-14:35"};
+			String c[] = {"12:45-14:45"};
+			String d[] = {"12:55-14:55"};
+			String aaa[] = {"12:30-14:30", "15:30-17:30", "18:30-20:30", "21:30-23:30"};
 			StringHolder outputRt = new StringHolder();
 			IntHolder rt = new IntHolder(99);
 			
 			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", b, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", c, rt);
+			if(rt.value == 0) { System.out.println("Room Created"); }
+			else { System.out.println("Room not Created"); }
+			Thread.sleep(3000);
+			
+			drrsImpl.createRoom("DVLA1213", 109, "23-10-1990", d, rt);
 			if(rt.value == 0) { System.out.println("Room Created"); }
 			else { System.out.println("Room not Created"); }
 			Thread.sleep(3000);
@@ -52,7 +71,7 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.deleteRoom("DVLA1213", 109, "23-10-1990", a, rt);
+			drrsImpl.deleteRoom("DVLA1213", 109, "23-10-1990", aaa, rt);
 			if(rt.value == 0) { System.out.println("Room Deleted"); }
 			else { System.out.println("Room not deleted"); }
 			Thread.sleep(3000);
@@ -70,7 +89,7 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30-14:30", outputRt, "DVL");
 			System.out.println("Booking: " + outputRt.value);
 			String bookingId = outputRt.value;
 			Thread.sleep(3000);
@@ -79,16 +98,7 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
-			System.out.println("Booking: " + outputRt.value);
-			bookingId = outputRt.value;
-			Thread.sleep(3000);
-			
-			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
-			System.out.println(outputRt.value);
-			Thread.sleep(3000);
-			
-			drrsImpl.cancelBooking("DVLS1234", "DVLS1234_23-10-1990_109_12:30 - 14:30_KKL", rt);
+			drrsImpl.cancelBooking("DVLS1234", "DVLS1234_23-10-1990_109_12:30-14:30_DVL", rt);
 			if(rt.value == -1) { System.out.println("Booking Cancellation Failed"); }
 			else { System.out.println("Booking Cancelled"); }
 			Thread.sleep(3000);
@@ -97,24 +107,24 @@ public class client
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
-			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30-14:30", outputRt, "DVL");
 			System.out.println("Booking: " + outputRt.value);
 			bookingId = outputRt.value;
 			Thread.sleep(3000);
-		
+			
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
 			
 			StringHolder changeResRt = new StringHolder();
-			drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_12:30 - 14:30_KKL", 
-					"WST", 109, "23-10-1990", "15:30 - 17:30", changeResRt);
+			drrsImpl.changeReservation("DVLS1234", "DVLS1234_23-10-1990_109_12:30-14:30_DVL", 
+					"DVL", 109, "23-10-1990", "15:30-17:30", changeResRt);
 			
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
-			
-			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30 - 14:30", outputRt, "KKL");
+			/*
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "12:30-14:30", outputRt, "DVL");
 			System.out.println("Booking: " + outputRt.value);
 			bookingId = outputRt.value;
 			Thread.sleep(3000);
@@ -122,6 +132,12 @@ public class client
 			drrsImpl.getAvailableTimeSlot("DVLS1234", "23-10-1990", outputRt);
 			System.out.println(outputRt.value);
 			Thread.sleep(3000);
+			
+			drrsImpl.bookRoom("DVLS1234", 109, "23-10-1990", "15:30-17:30", outputRt, "DVL");
+			System.out.println("Booking: " + outputRt.value);
+			bookingId = outputRt.value;
+			Thread.sleep(3000);
+			*/
 		} 
 		catch (Exception e) 
 		{

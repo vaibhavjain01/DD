@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.net.*;
 
-public class RMSOMAYEH{
+public class RMSOMAYEH {
 	
 	
 private static final long serialVersionUID = 1L;
@@ -46,22 +46,23 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	 {
 		 boolean EmtyRecord = true;
 				  
-		if(DVLDateRecord.containsKey(dateKey)){ 
-			logFile("DVL", "Date exists");
+		if(DVLDateRecord.containsKey(dateKey)){
+				   
+			logFile("DVL", "Date exists",userId);
 				   
 		    DVLRoomRecord =DVLDateRecord.get(dateKey);
 		    	    
 		        if (DVLRoomRecord == null) {
-		        	logFile("DVL", "No Room in this Date");		        	 	        	
+		        	logFile("DVL", "No Room in this Date",userId);		        	 	        	
 		        }
 		        else if (DVLRoomRecord != null){
 		        	
-		        	logFile("DVL", "There is some room in this Date");
+		        	logFile("DVL", "There is some room in this Date",userId);
 		        	boolean TimeExists = true; 
 		        	
 		        	
 		        	if (   DVLDateRecord.get(dateKey).containsKey(roomKey)      ){
-		        	logFile("DVL", "This room : " + roomKey + " : already exists");	
+		        	logFile("DVL", "This room : " + roomKey + " : already exists",userId);	
 		        		       
 		        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 		        	TimeSlotsInRoom = DVLDateRecord.get(dateKey).get(roomKey);
@@ -69,7 +70,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 		        		
 		        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-		        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+		        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 		    				TimeExists = true; 
 		    				EmtyRecord = false;
 		    				break;
@@ -81,17 +82,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	
 		        	if (TimeExists == false){
 		        	   
-		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey);
+		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 		      		        	      	        
 		        	  }
 		        	
 		        	else if (TimeExists == true){
-		        		logFile("DVL", "can not create");		        			
+		        		logFile("DVL", "can not create",userId);		        			
 		        	}
 			   }//room exist
 		        	
 		        	else {
-		        		logFile("DVL", "room not Exist");
+		        		logFile("DVL", "room not Exist",userId);
 		        	    
 		        	}
 		        	
@@ -100,7 +101,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			   } 
 			   
 			   else {//not contain date
-				   logFile("DVL", "Date not Exist");
+				   logFile("DVL", "Date not Exist",userId);
 				  
 				    }
 		        
@@ -116,21 +117,21 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 				  
 		if(KKLDateRecord.containsKey(dateKey)){
 				   
-			logFile("KKL", "Date exists");
+			logFile("KKL", "Date exists",userId);
 				   
 		    KKLRoomRecord =KKLDateRecord.get(dateKey);
 		    	    
 		        if (DVLRoomRecord == null) {
-		        	logFile("KKL", "No Room in this Date");		        	 	        	
+		        	logFile("KKL", "No Room in this Date",userId);		        	 	        	
 		        }
 		        else if (KKLRoomRecord != null){
 		        	
-		        	logFile("KKL", "There is some room in this Date");
+		        	logFile("KKL", "There is some room in this Date",userId);
 		        	boolean TimeExists = true; 
 		        	
 		        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 		        	if (   KKLDateRecord.get(dateKey).containsKey(roomKey)      ){
-		        	logFile("KKL", "This room : " + roomKey + " : already exists");	
+		        	logFile("KKL", "This room : " + roomKey + " : already exists",userId);	
 		        		       
 		        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 		        	TimeSlotsInRoom = KKLDateRecord.get(dateKey).get(roomKey);
@@ -138,7 +139,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 		        		
 		        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-		        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+		        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 		    				TimeExists = true; 
 		    				EmtyRecord = false;
 		    				break;
@@ -150,17 +151,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	
 		        	if (TimeExists == false){
 		        	   
-		        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey);
+		        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 		      		        	      	        
 		        	  }
 		        	
 		        	else if (TimeExists == true){
-		        		logFile("KKL", "can not create");		        			
+		        		logFile("KKL", "can not create",userId);		        			
 		        	}
 			   }//room exist
 		        	
 		        	else {
-		        		logFile("KKL", "room not Exist");
+		        		logFile("KKL", "room not Exist",userId);
 		        	    
 		        	}
 		        	
@@ -169,7 +170,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			   } 
 			   
 			   else {//not contain date
-				   logFile("KKL", "Date not Exist");
+				   logFile("KKL", "Date not Exist",userId);
 				  
 				    }
 		        
@@ -184,21 +185,21 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 				  
 		if(WSTDateRecord.containsKey(dateKey)){
 				   
-			logFile("WST", "Date exists");
+			logFile("WST", "Date exists",userId);
 				   
 		    WSTRoomRecord =WSTDateRecord.get(dateKey);
 		    	    
 		        if (WSTRoomRecord == null) {
-		        	logFile("WST", "No Room in this Date");		        	 	        	
+		        	logFile("WST", "No Room in this Date",userId);		        	 	        	
 		        }
 		        else if (WSTRoomRecord != null){
 		        	
-		        	logFile("WST", "There is some room in this Date");
+		        	logFile("WST", "There is some room in this Date",userId);
 		        	boolean TimeExists = true; 
 		        	
 		        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 		        	if (   WSTDateRecord.get(dateKey).containsKey(roomKey)      ){
-		        	logFile("WST", "This room : " + roomKey + " : already exists");	
+		        	logFile("WST", "This room : " + roomKey + " : already exists",userId);	
 		        		       
 		        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 		        	TimeSlotsInRoom = WSTDateRecord.get(dateKey).get(roomKey);
@@ -206,7 +207,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 		        		
 		        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-		        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+		        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 		    				TimeExists = true; 
 		    				EmtyRecord = false;
 		    				break;
@@ -218,17 +219,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	
 		        	if (TimeExists == false){
 		        	   
-		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey);
+		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 		      		        	      	        
 		        	  }
 		        	
 		        	else if (TimeExists == true){
-		        		logFile("WST", "can not create");		        			
+		        		logFile("WST", "can not create",userId);		        			
 		        	}
 			   }//room exist
 		        	
 		        	else {
-		        		logFile("WST", "room not Exist");
+		        		logFile("WST", "room not Exist",userId);
 		        	    
 		        	}
 		        	
@@ -237,7 +238,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			   } 
 			   
 			   else {//not contain date
-				   logFile("WST", "Date not Exist");
+				   logFile("WST", "Date not Exist",userId);
 				  
 				    }
 		        
@@ -253,24 +254,24 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 				  
 			   if(DVLDateRecord.containsKey(dateKey)){
 				   
-				   logFile("DVL", "Date exists");
+				   logFile("DVL", "Date exists",userId);
 				   
 		    DVLRoomRecord =DVLDateRecord.get(dateKey);
 		    
 		    
 		        if (DVLRoomRecord == null) {
-		        	logFile("DVL", "No Room in this Date");
+		        	logFile("DVL", "No Room in this Date",userId);
 		        	 
 		        	
 		        }
 		        else if (DVLRoomRecord != null){
 		        	
-		        	logFile("DVL", "There is some room in this Date");
+		        	logFile("DVL", "There is some room in this Date",userId);
 		        	boolean TimeExists = true; 
 		        	
 		        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 		        	if (   DVLDateRecord.get(dateKey).containsKey(roomKey)      ){
-		        	logFile("DVL", "This room : " + roomKey + " : already exists");	
+		        	logFile("DVL", "This room : " + roomKey + " : already exists",userId);	
 		        		       
 		        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 		        	TimeSlotsInRoom = DVLDateRecord.get(dateKey).get(roomKey);
@@ -278,7 +279,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 		        		
 		        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-		        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+		        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 		    				TimeExists = true; 
 		    				EmtyRecord = false;
 		    				break;
@@ -290,17 +291,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	
 		        	if (TimeExists == false){
 		        	   
-		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey);
+		        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 		      		         	        
 		        	  }
 		        	
 		        	else if (TimeExists == true){
-		        		logFile("DVL", "can not create");		        			
+		        		logFile("DVL", "can not create",userId);		        			
 		        	}
 			   }//room exist
 		        	
 		        	else {
-		        		logFile("DVL", "room not Exist");
+		        		logFile("DVL", "room not Exist",userId);
 		        	    
 		        	}
 		        	
@@ -309,7 +310,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			   } 
 			   
 			   else {//not contain date
-				   logFile("DVL", "Date not Exist");
+				   logFile("DVL", "Date not Exist",userId);
 				  
 				    }
 		        
@@ -325,24 +326,24 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		  
 		   if(KKLDateRecord.containsKey(dateKey)){
 			   
-			   logFile("KKL", "Date exists");
+			   logFile("KKL", "Date exists",userId);
 			   
 	    KKLRoomRecord =KKLDateRecord.get(dateKey);
 	    
 	    
 	        if (KKLRoomRecord == null) {
-	        	logFile("KKL", "No Room in this Date");
+	        	logFile("KKL", "No Room in this Date",userId);
 	        	 
 	        	
 	        }
 	        else if (KKLRoomRecord != null){
 	        	
-	        	logFile("KKL", "There is some room in this Date");
+	        	logFile("KKL", "There is some room in this Date",userId);
 	        	boolean TimeExists = true; 
 	        	
 	        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 	        	if (   KKLDateRecord.get(dateKey).containsKey(roomKey)      ){
-	        	logFile("KKL", "This room : " + roomKey + " : already exists");	
+	        	logFile("KKL", "This room : " + roomKey + " : already exists",userId);	
 	        		       
 	        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 	        	TimeSlotsInRoom = KKLDateRecord.get(dateKey).get(roomKey);
@@ -350,7 +351,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 	        		
 	        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-	        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+	        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 	    				TimeExists = true; 
 	    				EmtyRecord = false;
 	    				break;
@@ -362,17 +363,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	
 	        	if (TimeExists == false){
 	        	   
-	        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey);
+	        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 	      		         	        
 	        	  }
 	        	
 	        	else if (TimeExists == true){
-	        		logFile("KKL", "can not create");		        			
+	        		logFile("KKL", "can not create",userId);		        			
 	        	}
 		   }//room exist
 	        	
 	        	else {
-	        		logFile("KKL", "room not Exist");
+	        		logFile("KKL", "room not Exist",userId);
 	        	    
 	        	}
 	        	
@@ -381,7 +382,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		   } 
 		   
 		   else {//not contain date
-			   logFile("KKL", "Date not Exist");
+			   logFile("KKL", "Date not Exist",userId);
 			  
 			    }
 	        
@@ -399,24 +400,24 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		  
 		   if(WSTDateRecord.containsKey(dateKey)){
 			   
-			   logFile("WST", "Date exists");
+			   logFile("WST", "Date exists",userId);
 			   
 	    WSTRoomRecord =WSTDateRecord.get(dateKey);
 	    
 	    
 	        if (WSTRoomRecord == null) {
-	        	logFile("WST", "No Room in this Date");
+	        	logFile("WST", "No Room in this Date",userId);
 	        	 
 	        	
 	        }
 	        else if (WSTRoomRecord != null){
 	        	
-	        	logFile("WST", "There is some room in this Date");
+	        	logFile("WST", "There is some room in this Date",userId);
 	        	boolean TimeExists = true; 
 	        	
 	        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 	        	if (   WSTDateRecord.get(dateKey).containsKey(roomKey)      ){
-	        	logFile("WST", "This room : " + roomKey + " : already exists");	
+	        	logFile("WST", "This room : " + roomKey + " : already exists",userId);	
 	        		       
 	        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 	        	TimeSlotsInRoom = WSTDateRecord.get(dateKey).get(roomKey);
@@ -424,7 +425,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 	        		
 	        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-	        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + "  exists");		    				
+	        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + "  exists",userId);		    				
 	    				TimeExists = true; 
 	    				EmtyRecord = false;
 	    				break;
@@ -436,17 +437,17 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	
 	        	if (TimeExists == false){
 	        	   
-	        		    logFile("WST", "timeslot  is not exist in this day and room : " + timeKey);
+	        		    logFile("WST", "timeslot  is not exist in this day and room : " + timeKey,userId);
 	      		         	        
 	        	  }
 	        	
 	        	else if (TimeExists == true){
-	        		logFile("WST", "can not create");		        			
+	        		logFile("WST", "can not create",userId);		        			
 	        	}
 		   }//room exist
 	        	
 	        	else {
-	        		logFile("WST", "room not Exist");
+	        		logFile("WST", "room not Exist",userId);
 	        	    
 	        	}
 	        	
@@ -455,7 +456,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		   } 
 		   
 		   else {//not contain date
-			   logFile("WST", "Date not Exist");
+			   logFile("WST", "Date not Exist",userId);
 			  
 			    }
 	        
@@ -469,13 +470,13 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		  
 		   if(DVLDateRecord.containsKey(dateKey)){
 			   
-			   logFile("DVL", "Date exists");
+			   logFile("DVL", "Date exists",userId);
 			   
 	    DVLRoomRecord =DVLDateRecord.get(dateKey);
 	    
 	    
 	        if (DVLRoomRecord == null) {
-	        	logFile("DVL", "No Room in this Date");
+	        	logFile("DVL", "No Room in this Date",userId);
 	        	 
 	        	DVLRoomRecord = new HashMap<String ,List<String>>();
 	        	 List<String> TimeSlots = new ArrayList<String>();
@@ -486,21 +487,23 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        }
 	        else if (DVLRoomRecord != null){
 	        	
-	        	logFile("DVL", "There is some room in this Date");
+	        	logFile("DVL", "There is some room in this Date",userId);
 	        	boolean TimeExists = true; 
-	        	logFile("DVL", "roomkey" + roomKey);
+	        	logFile("DVL", "roomkey" + roomKey,userId);
 	        	
 	        	if (   DVLDateRecord.get(dateKey).containsKey(roomKey)      ){
-	        	logFile("DVL", "This room : " + roomKey + " : already exists");	
+	        	logFile("DVL", "This room : " + roomKey + " : already exists",userId);	
 	        	
 	        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 	        	TimeSlotsInRoom = DVLDateRecord.get(dateKey).get(roomKey);
+	        	if (TimeSlotsInRoom.size() == 0)
+	        		TimeExists = false;
 	        	
 	        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 	        		
 	        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-	        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + ": already exists");
-	    				logFile("DVL", "can not create");
+	        			logFile("DVL", "This room : " + roomKey + " This time :" + timeKey  + ": already exists",userId);
+	    				logFile("DVL", "can not create",userId);
 	    				TimeExists = true; 
 	    				break;
 	    				
@@ -511,7 +514,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	
 	        	if (TimeExists == false){
 	        	   
-	        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey);
+	        		    logFile("DVL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 	      		       
 	        		    TimeSlotsInRoom.add(timeKey);
 	      		       
@@ -522,12 +525,12 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	  }
 	        	
 	        	else if (TimeExists == false){
-	        		logFile("DVL", "can not create");		        			
+	        		logFile("DVL", "can not create",userId);		        			
 	        	}
 		   }//room exist
 	        	
 	        	else {
-	        		logFile("DVL", "in room is not");
+	        		logFile("DVL", "in room is not",userId);
 	        	    //DVLRoomRecord = new HashMap<String ,List<String>>();
 	        	    List<String> TimeSlots = new ArrayList<String>();
 	        	    TimeSlots.add(timeKey);
@@ -540,7 +543,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		   } 
 		   
 		   else {//not contain date
-			   logFile("DVL", "Date not Exist");
+			   logFile("DVL", "Date not Exist",userId);
 			   List<String> TimeSlots = new ArrayList<String>();
 			   TimeSlots.add(timeKey);
 			   DVLRoomRecord = new HashMap<String ,List<String>>();
@@ -554,13 +557,13 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			  
 		   if(KKLDateRecord.containsKey(dateKey)){
 			   
-			   logFile("KKL", "Date exists");
+			   logFile("KKL", "Date exists",userId);
 			   
 	    KKLRoomRecord =KKLDateRecord.get(dateKey);
 	    
 	    
 	        if (KKLRoomRecord == null) {
-	        	logFile("DVL", "No Room in this Date");
+	        	logFile("DVL", "No Room in this Date",userId);
 	        	 
 	        	KKLRoomRecord = new HashMap<String ,List<String>>();
 	        	 List<String> TimeSlots = new ArrayList<String>();
@@ -570,24 +573,26 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        }
 	        else if (DVLRoomRecord != null){
 	        	
-	        	logFile("KKL", "There is some room in this Date");
+	        	logFile("KKL", "There is some room in this Date",userId);
 	        	boolean TimeExists = true; 
 	        	
 	        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 	        	if (   KKLDateRecord.get(dateKey).containsKey(roomKey)      ){
-	        	logFile("KKL", "This room : " + roomKey + " : already exists");	
+	        	logFile("KKL", "This room : " + roomKey + " : already exists",userId);	
 	        	
 	        	//logFile("DVL", "DVLDateRecord.get(dateKey).get(roomKey) : " + DVLDateRecord.get(dateKey).get(roomKey));
 	        	//logFile("DVL", "timeKey : " + timeKey);
 	        	
 	        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 	        	TimeSlotsInRoom = KKLDateRecord.get(dateKey).get(roomKey);
+	        	if (TimeSlotsInRoom.size() == 0)
+	        		TimeExists = false;
 	        	
 	        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 	        		
 	        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-	        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + ": already exists");
-	    				logFile("KKL", "can not create");
+	        			logFile("KKL", "This room : " + roomKey + " This time :" + timeKey  + ": already exists",userId);
+	    				logFile("KKL", "can not create",userId);
 	    				TimeExists = true; 
 	    				break;
 	    				
@@ -598,7 +603,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	
 	        	if (TimeExists == false){
 	        	   
-	        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey);
+	        		    logFile("KKL", "timeslot  is not exist in this day and room : " + timeKey,userId);
 	      		        //List<String> TimeSlots = new ArrayList<String>();
 	      		       // String time = DVLDateRecord.get(dateKey).get(roomKey).get(0);
 	        		    TimeSlotsInRoom.add(timeKey);
@@ -611,7 +616,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	  }
 	        	
 	        	else if (TimeExists == false){
-	        		logFile("KKL", "can not create");		        			
+	        		logFile("KKL", "can not create",userId);		        			
 	        	}
 		   }//room exist
 	        	
@@ -628,7 +633,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		   } 
 		   
 		   else {//not contain date
-			   logFile("KKL", "Date not Exist");
+			   logFile("KKL", "Date not Exist",userId);
 			   List<String> TimeSlots = new ArrayList<String>();
 			   TimeSlots.add(timeKey);
 			   KKLRoomRecord = new HashMap<String ,List<String>>();
@@ -643,13 +648,13 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			  
 		   if(WSTDateRecord.containsKey(dateKey)){
 			   
-			   logFile("DVL", "Date exists");
+			   logFile("DVL", "Date exists",userId);
 			   
 			   WSTRoomRecord =WSTDateRecord.get(dateKey);
 	    
 	    
 	        if (WSTRoomRecord == null) {
-	        	logFile("DVL", "No Room in this Date");
+	        	logFile("DVL", "No Room in this Date",userId);
 	        	 
 	        	WSTRoomRecord = new HashMap<String ,List<String>>();
 	        	 List<String> TimeSlots = new ArrayList<String>();
@@ -659,21 +664,23 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        }
 	        else if (WSTRoomRecord != null){
 	        	
-	        	logFile("DVL", "There is some room in this Date");
+	        	logFile("DVL", "There is some room in this Date",userId);
 	        	boolean TimeExists = true; 
 	        	
 	        	//if (DVLDateOuterRecord.get(key1).equals(key2)){
 	        	if (   WSTDateRecord.get(dateKey).containsKey(roomKey)      ){
-	        	logFile("WST", "This room : " + roomKey + " : already exists");	
+	        	logFile("WST", "This room : " + roomKey + " : already exists",userId);	
 	        		        		        	
 	        	List<String> TimeSlotsInRoom = new ArrayList<String>();
 	        	TimeSlotsInRoom = WSTDateRecord.get(dateKey).get(roomKey);
+	        	if (TimeSlotsInRoom.size() == 0)
+	        		TimeExists = false;
 	        	
 	        	for (int i = 0; i< TimeSlotsInRoom.size(); i++) {	
 	        		
 	        		if ( TimeSlotsInRoom.get(i).equals(timeKey)){
-	        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + ": already exists");
-	    				logFile("WST", "can not create");
+	        			logFile("WST", "This room : " + roomKey + " This time :" + timeKey  + ": already exists",userId);
+	    				logFile("WST", "can not create",userId);
 	    				TimeExists = true; 
 	    				break;
 	    				
@@ -684,7 +691,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	
 	        	if (TimeExists == false){
 	        	   
-	        		    logFile("WST", "timeslot  is not exist in this day and room : " + timeKey);
+	        		    logFile("WST", "timeslot  is not exist in this day and room : " + timeKey,userId);
 	      		        //List<String> TimeSlots = new ArrayList<String>();
 	      		       // String time = DVLDateRecord.get(dateKey).get(roomKey).get(0);
 	        		    TimeSlotsInRoom.add(timeKey);
@@ -697,7 +704,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 	        	  }
 	        	
 	        	else if (TimeExists == false){
-	        		logFile("WST", "can not create");		        			
+	        		logFile("WST", "can not create",userId);		        			
 	        	}
 		   }//room exist
 	        	
@@ -714,7 +721,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		   } 
 		   
 		   else {//not contain date
-			   logFile("WST", "Date not Exist");
+			   logFile("WST", "Date not Exist",userId);
 			   List<String> TimeSlots = new ArrayList<String>();
 			   TimeSlots.add(timeKey);
 			   WSTRoomRecord = new HashMap<String ,List<String>>();
@@ -754,7 +761,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 					        	}
 			        			
 			        			System.out.println("delnom" + delRecordIndex);
-			        			logFile("DVL", "delnom" + delRecordIndex);
+			        			logFile("DVL", "delnom" + delRecordIndex,userId);
 			        			TimeSlotsInRoom.remove(delRecordIndex);			        			
 			  			        			
 			        			//DVLDateRecord.remove(key1,DVLRoomRecord);
@@ -793,7 +800,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	}
       			
       			System.out.println("delnom" + delRecordIndex);
-      			logFile("KKL", "delnom" + delRecordIndex);
+      			logFile("KKL", "delnom" + delRecordIndex,userId);
       			TimeSlotsInRoom.remove(delRecordIndex);			        			
 			        			
       			//DVLDateRecord.remove(key1,DVLRoomRecord);
@@ -831,7 +838,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 		        	}
       			
       			System.out.println("delnom" + delRecordIndex);
-      			logFile("WST", "delnom" + delRecordIndex);
+      			logFile("WST", "delnom" + delRecordIndex,userId);
       			TimeSlotsInRoom.remove(delRecordIndex);			        			
 			        			
       			//DVLDateRecord.remove(key1,DVLRoomRecord);
@@ -852,7 +859,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 				   
 			        	if (DVLRoomRecord == null) {
 			        		System.out.println(" Date is Empty!!");
-			        		logFile("DVL","Date is Empty for deleting");
+			        		logFile("DVL","Date is Empty for deleting",userId);
 			        	    EmtyRecord = true;
 			        	}
 			        	else if (DVLRoomRecord != null){
@@ -861,7 +868,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			        				//&& (DVLDateinnerRecord.get(key2) == value )) 
 			        		{
 			        						        			
-			        			logFile("DVL","xvalue " + value);
+			        			logFile("DVL","xvalue " + value,userId);
 			        			if (DVLRoomRecord.get(key2).equals(value))	{
 			        				
 			        				//logFile("DVL","yyyyy");
@@ -869,7 +876,7 @@ public static Map <String , List<String>> WSTRoomRecord = Collections.synchroniz
 			        			}
 			        			else{ 
 			        				EmtyRecord = true;
-			        				logFile("DVL","time slot is Empty for this date and room number so can not delete");
+			        				logFile("DVL","time slot is Empty for this date and room number so can not delete",userId);
 			        			}
 			        				
 			        		}
@@ -1441,7 +1448,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					if (result == false)
 					{
 					//recordId = "CR" + generateId(String.valueOf(DVLDateRecord.size()+1));	
-						recordId = userId+campusName+date+roomNumber+timeSlot;
+					//recordId = userId+campusName+date+roomNumber+timeSlot;
+					recordId = userId + "_" + date + "_" + roomNumber + "_" + timeSlot + "_" + "DVL";
 					DVLDeleteElement(date, roomNumber, timeSlot);
 					logFile("DVL","Room Booked :" + DVLDateRecord.values(),userId);
 					//CountBook++;
@@ -1459,8 +1467,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					result = KKLCheckBeforeBook(date, roomNumber, timeSlot);					
 					if (result == false)
 					{	
-	
-						recordId = campusName+date+roomNumber+timeSlot+userId;
+						recordId = userId + "_" + date + "_" + roomNumber + "_" + timeSlot + "_" + "KKL";
 						KKLDeleteElement(date, roomNumber, timeSlot);					
 						logFile("KKL","Room Booked :" + KKLDateRecord.values(),userId);					
 					}
@@ -1476,7 +1483,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					
 					if (result == false)
 					{					
-					recordId = campusName+date+roomNumber+timeSlot+userId;
+					//recordId = campusName+date+roomNumber+timeSlot+userId;
+					recordId = userId + "_" + date + "_" + roomNumber + "_" + timeSlot + "_" + "WST";
 					WSTDeleteElement(date, roomNumber, timeSlot);
 					logFile("WST","Room Booked :" + WSTDateRecord.values(),userId);		
 					}
@@ -1496,24 +1504,24 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 	
 	public  String getDate(String id){
 		String Date;
-		Date = id.substring(3, 11);
+		Date = id.substring(3, 13);
 		return Date;
 	}
 	
 	public  String getRoom(String id){
 		String Room;			
-		Room = id.substring(11, 14);
+		Room = id.substring(13, 16);
 		return Room;
 	}
 	
 	public String getTime(String id){
 		String Time;
-		 Time= id.substring(14, 16);
+		 Time= id.substring(16, 27);
 		return Time;
 	}
 	public String getUserId(String id){
 		String Time;
-		 Time= id.substring(16, 24);
+		 Time= id.substring(27, 35);
 		return Time;
 	}
 	
@@ -1521,6 +1529,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 		
 	public boolean cancelBooking (String bookingID){
 					
+		System.out.println("SOMAYEH : VJ BOOKING ID" + bookingID);
 		String DestinationCampus = bookingID.substring(0, 3);
 		logFile(DestinationCampus,"bookingID: " + bookingID ,userId);
 		
@@ -1532,9 +1541,6 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 		
 		String userId = getUserId(bookingID);
 		logFile(DestinationCampus,"userId  in canceling: " + userId,userId);
-		
-		
-				
 		
 		String Time = getTime(bookingID);
 		if (DestinationCampus.equals("DVL")){			
@@ -1554,8 +1560,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 	}
 			
 	int DVLserverPort= 3000;
-	int KKLserverPort= 4000;
-	int WSTserverPort= 5000;
+	int KKLserverPort= 3500;
+	int WSTserverPort= 4000;
 			
 	public class DVLUdpServer implements Runnable{
 
@@ -1566,7 +1572,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 			System.out.println("DVL UDP Server Started");
 			DatagramSocket aSocket = null;
 			try{
-				aSocket = new DatagramSocket(DVLserverPort);					
+				aSocket = new DatagramSocket(DVLserverPort);		
 				byte[] buffer = new byte[100];
 			
 				String message = "";
@@ -1581,6 +1587,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket request = new DatagramPacket(buffer,buffer.length);
 					aSocket.receive(request);																			
 					Temp = new String(request.getData());
+					System.out.println("");
 					Temp = Temp.trim();
 					logFile("DVL", "DVLUDP received:   " + Temp,userId);
 					String[] tokens = Temp.split(",");
@@ -1591,6 +1598,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					}
 					else if  (tokens[0].equals("book")){
 						logFile("DVL","in DVL book",userId);
+					System.out.println("SOMAYEH BOOK: " + tokens.length);
 					String res = bookRoom(tokens[5],tokens[1], tokens[2],tokens[3],tokens[4]);
 					logFile("DVL","after DVL book",userId);
 					Result = res.toString();
@@ -1622,6 +1630,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					aSocket.send(reply);
 				
 					logFile("DVL",new String(reply.getData()),userId);
+					buffer = new byte[100];
 				}
 			}catch (SocketException e){System.out.println("DVL Socket: " + e.getMessage());
 			}catch (IOException e) {System.out.println("IO: " + e.getMessage());
@@ -1640,7 +1649,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 			DatagramSocket aSocket1 = null;
 			try{
 				aSocket1 = new DatagramSocket(KKLserverPort);					
-				byte[] buffer = new byte[50];
+				byte[] buffer = new byte[100];
 				
 				String message = "";
 		
@@ -1692,6 +1701,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					aSocket1.send(reply);
 				
 					logFile("KKL",new String(reply.getData()),userId);
+					buffer = new byte[100];
 				}
 			}catch (SocketException e){System.out.println("KKL Socket: " + e.getMessage());
 			}catch (IOException e) {System.out.println("IO: " + e.getMessage());
@@ -1710,7 +1720,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 			DatagramSocket aSocket2 = null;
 			try{												
 				aSocket2 = new DatagramSocket(WSTserverPort);							
-				byte[] buffer = new byte[60];
+				byte[] buffer = new byte[100];
 				String message = "";		
 				String Result = "";
 				
@@ -1758,7 +1768,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					buffer = message.getBytes();
 					DatagramPacket reply = new DatagramPacket(buffer,buffer.length,request.getAddress(),request.getPort());
 					aSocket2.send(reply);
-				
+					buffer = new byte[100];
 					//logFile("WST reply",message);
 				}
 			}catch (SocketException e){System.out.println("WST Socket: " + e.getMessage());
@@ -1800,8 +1810,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 	}
 	
 	
-	public String UDPOperations(String userId,String operation,String campus,String DestinationCampus, String roomNumber,String dateKey, String timeSlot, String RecordID) {
-		
+	public String UDPOperations(String userId,String operation,String campus,
+			String DestinationCampus, String roomNumber,String dateKey, String timeSlot, String RecordID) {
 		
 		DatagramSocket SlotSocket = null;
 		DatagramSocket SlotSocket1 = null;
@@ -1811,10 +1821,15 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 		Thread t2 = new Thread(new KKLUdpServer());
 		Thread t3 = new Thread(new WSTUdpServer());
 	
+		DVLserverPort = DVLserverPort +1;
+		KKLserverPort = KKLserverPort +1; 
+		WSTserverPort = WSTserverPort +1;
 		
-		DVLserverPort = DVLserverPort +50;
-		KKLserverPort = KKLserverPort +50; 
-		WSTserverPort = WSTserverPort +50;
+		/*
+		DVLserverPort = central.udpPortDVLRM3;
+		KKLserverPort = central.udpPortKKLRM3;
+		WSTserverPort = central.udpPortWSTRM3;
+		*/
 	
 		t1.start();
 		t2.start();
@@ -1824,7 +1839,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 		int DestinationPort = 0;
 		String message = null;
 		
-		byte[] buffer = new byte[10];
+		byte[] buffer = new byte[1050];
 		
 		
 											
@@ -1861,6 +1876,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 						SlotSocket.receive(reply);				
 						message += "  KKL: ";
 						message += new String(reply.getData());
+						message = message.trim();
 						//SlotSocket.close();
 						//t1.interrupt();
 										
@@ -1877,6 +1893,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 						SlotSocket.receive(reply1);
 						message += "  WST: ";
 						message += new String(reply1.getData());
+						message = message.trim();
 						//SlotSocket.close();	
 						//t2.interrupt();
 
@@ -1974,7 +1991,9 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					message = "";					
 					//buffer = null;
 					String DestinationCampus2 = "";
-					
+					String tokensTmp[] = RecordID.split("_");
+					RecordID = tokensTmp[4] + tokensTmp[1] + tokensTmp[2] + tokensTmp[3] + tokensTmp[0];
+					System.out.println("Corrected booking id: " + RecordID);
 					msg = new String("cancel" + "," +  RecordID  + "," + userId);	
 					logFile ("DVL", "in DVL canceling in udpoperation + msg " + msg,userId);
 					int length = msg.length();					
@@ -2012,9 +2031,10 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 							reply =new DatagramPacket (buffer,buffer.length);
 							SlotSocket.receive(reply);								
 							message = new String(reply.getData());
+							message = message.trim();
 							logFile ("DVL", "in DVL booking in udpoperation + reply " + message,userId);	
 						
-						
+							
 					}
 
 					//SlotSocket.close();
@@ -2048,6 +2068,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					SlotSocket1.receive(reply);				
 					message += "  DVL: ";
 					message += new String(reply.getData());
+					message = message.trim();
 					//SlotSocket1.close();
 					
 					//t2.sleep(1000);
@@ -2064,6 +2085,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					SlotSocket1.receive(reply1);
 					message += "  WST: ";
 					message += new String(reply1.getData());
+					message = message.trim();
 					//SlotSocket1.close();					
 				}
 				else if (operation.equals("book")){
@@ -2141,7 +2163,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					SlotSocket1.receive(reply);								
 					message = new String(reply.getData());
-					logFile ("KKL", "in KKL deleting in udpoperation + reply " + message);
+					logFile ("KKL", "in KKL deleting in udpoperation + reply " + message,userId);
 					//SlotSocket.close();
 										
 				}	
@@ -2152,13 +2174,15 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					message = "";
 					String DestinationCampus2 = "";
 					//buffer = null;
-					
+					String tokensTmp[] = RecordID.split("_");
+					RecordID = tokensTmp[4] + tokensTmp[1] + tokensTmp[2] + tokensTmp[3] + tokensTmp[0];
+					System.out.println("Corrected booking id: " + RecordID);
 					msg = new String("cancel" + "," +  RecordID + "," + userId);	
-					logFile ("KKL", "in KKL canceling in udpoperation + msg " + msg);
+					logFile ("KKL", "in KKL canceling in udpoperation + msg " + msg,userId);
 					int length = msg.length();					
 					byte[]m = msg.getBytes();
 					DestinationCampus2 = RecordID.substring(0, 3);					
-					logFile(DestinationCampus2,"DestinationCampus2: " + DestinationCampus2);
+					logFile(DestinationCampus2,"DestinationCampus2: " + DestinationCampus2,userId);
 					DestinationPort = getDestinationPort(DestinationCampus2);
 					
 					DatagramPacket request =new DatagramPacket (m,msg.length(),aHost,DestinationPort);					
@@ -2166,31 +2190,32 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					SlotSocket1.receive(reply);							
 					message = new String(reply.getData());
-					logFile ("KKL", "message in change reservation: " + message);
+					logFile ("KKL", "message in change reservation: " + message,userId);
 					
 					if (message.trim().equals("true")){
 						
-							logFile ("KKL", "Canceling was done ");
+							logFile ("KKL", "Canceling was done ",userId);
 						 	msg = "";
 						    message = "";					
 							//buffer = null;
-						    logFile("KKL","DestinationCampus in change in true : " + DestinationCampus);
+						    logFile("KKL","DestinationCampus in change in true : " + DestinationCampus,userId);
 							DestinationPort = getDestinationPort(DestinationCampus);
-							logFile ("KKL", "in KKL booking in udpoperation + DestinationPort " + DestinationPort);
+							logFile ("KKL", "in KKL booking in udpoperation + DestinationPort " + DestinationPort,userId);
 							
 							
 							msg = new String("book" + "," + DestinationCampus + "," + roomNumber + "," + dateKey + "," + timeSlot + "," + userId );
-							logFile ("KKL", "in KKL booking in udpoperation + msg " + msg);
+							logFile ("KKL", "in KKL booking in udpoperation + msg " + msg,userId);
 							
 							length = msg.length();					
-							m = msg.getBytes();							
-							request =new DatagramPacket (m,msg.length(),aHost,DestinationPort);										
+							byte[]m2 = msg.getBytes();							
+							request =new DatagramPacket (m2,msg.length(),aHost,DestinationPort);										
 							SlotSocket1.send(request);	
 							
 							reply =new DatagramPacket (buffer,buffer.length);
 							SlotSocket1.receive(reply);								
 							message = new String(reply.getData());
-							logFile ("KKL", "in KKL booking in udpoperation + reply " + message);	
+							message = message.trim();
+							logFile ("KKL", "in KKL booking in udpoperation + reply " + message,userId);	
 						
 						
 					}
@@ -2228,6 +2253,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					
 					message += "  DVL: ";
 					message += new String(reply.getData());
+					message = message.trim();
 					//SlotSocket2.close();
 					
 					SlotSocket2 = new DatagramSocket();
@@ -2242,16 +2268,17 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					SlotSocket2.receive(reply1);
 					message += "  KKL: ";
 					message += new String(reply1.getData());
+					message = message.trim();
 					//SlotSocket2.close();
 				}//count
 				else if (operation.equals("book")){
 					msg = new String("book" + "," + DestinationCampus + "," + roomNumber + "," + dateKey + "," + timeSlot+ "," + userId );
-					logFile("WST","msg request : msg lenght : " + msg + "  :" + msg.length());
+					logFile("WST","msg request : msg lenght : " + msg + "  :" + msg.length(),userId);
 					DestinationPort = getDestinationPort(DestinationCampus);
 					int length = msg.length();					
 					byte[]m = msg.getBytes();							
 					DatagramPacket request =new DatagramPacket (m,msg.length(),aHost,DestinationPort);
-					logFile("","msg request after sending :  : " + new String(request.getData()));
+					logFile("","msg request after sending :  : " + new String(request.getData()),userId);
 					SlotSocket2.send(request);															
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					
@@ -2267,7 +2294,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					byte[]m = msg.getBytes();
 					DestinationCampus = RecordID.substring(0, 3);
 					DestinationPort = getDestinationPort(DestinationCampus);
-					logFile(DestinationCampus,"DestinationCampus: " + DestinationCampus);
+					logFile(DestinationCampus,"DestinationCampus: " + DestinationCampus,userId);
 					DatagramPacket request =new DatagramPacket (m,msg.length(),aHost,DestinationPort);					
 					SlotSocket2.send(request);															
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
@@ -2279,9 +2306,9 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 				    msg = "";
 				    message = "";													
 					DestinationPort = getDestinationPort(DestinationCampus);
-					logFile ("WST", "in WST create in udpoperation + DestinationPort " + DestinationPort);										
+					logFile ("WST", "in WST create in udpoperation + DestinationPort " + DestinationPort,userId);										
 					msg = new String("create" + "," + DestinationCampus + "," + roomNumber + "," + dateKey + "," + timeSlot + ","+ userId );
-					logFile ("WST", "in WST create in udpoperation + msg " + msg);
+					logFile ("WST", "in WST create in udpoperation + msg " + msg,userId);
 					
 					int length = msg.length();					
 					byte[]m = msg.getBytes();							
@@ -2291,7 +2318,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					SlotSocket2.receive(reply);								
 					message = new String(reply.getData());
-					logFile ("WST", "in WST creating in udpoperation + reply " + message);
+					logFile ("WST", "in WST creating in udpoperation + reply " + message,userId);
 					//SlotSocket.close();
 										
 				}	
@@ -2300,10 +2327,10 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 				    msg = "";
 				    message = "";													
 					DestinationPort = getDestinationPort(DestinationCampus);
-					logFile ("WST", "in WST delete in udpoperation + DestinationPort " + DestinationPort);										
+					logFile ("WST", "in WST delete in udpoperation + DestinationPort " + DestinationPort,userId);										
 					msg = new String("delete" + "," + DestinationCampus + "," + roomNumber + "," + dateKey + "," + timeSlot + ","+ userId );
 					
-					logFile ("WST", "in WST delete in udpoperation + msg " + msg);
+					logFile ("WST", "in WST delete in udpoperation + msg " + msg,userId);
 					
 					int length = msg.length();					
 					byte[]m = msg.getBytes();							
@@ -2313,7 +2340,7 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					SlotSocket2.receive(reply);								
 					message = new String(reply.getData());
-					logFile ("WST", "in WST deleting in udpoperation + reply " + message);
+					logFile ("WST", "in WST deleting in udpoperation + reply " + message,userId);
 					//SlotSocket.close();
 										
 				}	
@@ -2323,13 +2350,15 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					message = "";					
 					//buffer = null;
 					String DestinationCampus2 = "";
-					
+					String tokensTmp[] = RecordID.split("_");
+					RecordID = tokensTmp[4] + tokensTmp[1] + tokensTmp[2] + tokensTmp[3] + tokensTmp[0];
+					System.out.println("Corrected booking id: " + RecordID);
 					msg = new String("cancel" + "," +  RecordID + "," + userId);	
-					logFile ("WST", "in WST canceling in udpoperation + msg " + msg);
+					logFile ("WST", "in WST canceling in udpoperation + msg " + msg,userId);
 					int length = msg.length();					
 					byte[]m = msg.getBytes();
 					DestinationCampus2 = RecordID.substring(0, 3);					
-					logFile(DestinationCampus2,"DestinationCampus: " + DestinationCampus2);
+					logFile(DestinationCampus2,"DestinationCampus: " + DestinationCampus2,userId);
 					DestinationPort = getDestinationPort(DestinationCampus2);
 					
 					DatagramPacket request =new DatagramPacket (m,msg.length(),aHost,DestinationPort);					
@@ -2337,21 +2366,21 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 					DatagramPacket reply =new DatagramPacket (buffer,buffer.length);
 					SlotSocket2.receive(reply);							
 					message = new String(reply.getData());
-					logFile ("WST", "message in change reservation: " + message);
+					logFile ("WST", "message in change reservation: " + message,userId);
 					
 					if (message.trim().equals("true")){
 						
-							logFile ("WST", "Canceling was done ");
+							logFile ("WST", "Canceling was done ",userId);
 						 	msg = "";
 						    message = "";					
 							//buffer = null;
-						    logFile("WST","DestinationCampus in change in true : " + DestinationCampus);
+						    logFile("WST","DestinationCampus in change in true : " + DestinationCampus,userId);
 							DestinationPort = getDestinationPort(DestinationCampus);
-							logFile ("WST", "in WST booking in udpoperation + DestinationPort " + DestinationPort);
+							logFile ("WST", "in WST booking in udpoperation + DestinationPort " + DestinationPort,userId);
 							
 							
 							msg = new String("book" + "," + DestinationCampus + "," + roomNumber + "," + dateKey + "," + timeSlot + "," + userId );
-							logFile ("WST", "in WST booking in udpoperation + msg " + msg);
+							logFile ("WST", "in WST booking in udpoperation + msg " + msg,userId);
 							
 							length = msg.length();					
 							m = msg.getBytes();							
@@ -2361,7 +2390,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 							reply =new DatagramPacket (buffer,buffer.length);
 							SlotSocket2.receive(reply);								
 							message = new String(reply.getData());
-							logFile ("WST", "in DVL booking in udpoperation + reply " + message);	
+							message = message.trim();
+							logFile ("WST", "in DVL booking in udpoperation + reply " + message,userId);	
 						
 						
 					}
@@ -2382,8 +2412,8 @@ public boolean deleteRoom( String userId,String campusName,String roomNumber,Str
 		} break;
 		}
 		
-		logFile(campus,message);
-		return message;
+		logFile(campus,message,userId);
+		return message + ";RM3" + ";";
 		
 	}
 

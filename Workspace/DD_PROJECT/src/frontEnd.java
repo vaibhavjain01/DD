@@ -24,6 +24,9 @@ public class frontEnd extends drrsCorbaPOA {
 	private Integer udpPort;
 	private Integer serverFlag = 0;		// 0 = DVL, 1 = KKL, 2 = WST
 	ArrayList<String> msgQueue = new ArrayList<String>();
+	Integer reqNo = 0;
+	
+	ArrayList<String> clientResp = new ArrayList<String>();
 	
 	public static void main(String[] args) {
 		frontEnd objServerStarter = new frontEnd();
@@ -128,6 +131,11 @@ public class frontEnd extends drrsCorbaPOA {
 			req += listOfTimeSlots[ctr] + ";";
 		}
 		addToMsgQueue(req);
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = Integer.parseInt(clientResp.get(0));
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -139,6 +147,11 @@ public class frontEnd extends drrsCorbaPOA {
 			req += listOfTimeSlots[ctr] + ";";
 		}
 		addToMsgQueue(req);
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = Integer.parseInt(clientResp.get(0));
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -147,7 +160,11 @@ public class frontEnd extends drrsCorbaPOA {
 		// TODO Auto-generated method stub
 		String req = "book;" + studentId + ";" + Integer.toString(roomNumber) + ";" + date + ";" + timeSlot + ";" + campusName + ";";
 		addToMsgQueue(req);
-		rt.value = "FAILED";
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = clientResp.get(0);
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -156,6 +173,11 @@ public class frontEnd extends drrsCorbaPOA {
 		String req = "available;" + studentId + ";" + date + ";";
 		addToMsgQueue(req);
 		rt.value = "FAILED";
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = clientResp.get(0);
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -163,6 +185,11 @@ public class frontEnd extends drrsCorbaPOA {
 		// TODO Auto-generated method stub
 		String req = "cancel;" + studentId + ";" + bookingID + ";";
 		addToMsgQueue(req);
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = Integer.parseInt(clientResp.get(0));
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -172,7 +199,11 @@ public class frontEnd extends drrsCorbaPOA {
 		String req = "change;" + studentId + ";" + booking_id + ";" + newCampusName + ";" + Integer.toString(newRoomNumber) + ";"
 				+ newDate + ";" + newTimeSlot + ";";
 		addToMsgQueue(req);
-		rt.value = "FAILED";
+		while(clientResp.size() < 1) {
+			// do nothing
+		}
+		rt.value = clientResp.get(0);
+		clientResp.remove(0);
 	}
 
 	@Override
@@ -192,7 +223,7 @@ public class frontEnd extends drrsCorbaPOA {
 	{
 	  public void run()
 	  {
-		  Integer size = 0;
+		 Integer size = 0;
 		 while(true)
 		 {
 			 size = msgQueue.size();
@@ -220,32 +251,37 @@ public class frontEnd extends drrsCorbaPOA {
 		 Integer portRM1 = central.udpPortRM1;
 		 Integer portRM2 = central.udpPortRM2;
 		 Integer portRM3 = central.udpPortRM3;
+		 
+		 String tokens[] = req.split(";");
+		 findServerNameFromRequest(tokens[1]);
+		 
 		 System.out.println("At front end: " + req);
 		 if(serverFlag == 0) // DVL
 		 {
 			 replicaPortOne = central.udpPortDVLRM1;
 			 replicaPortTwo = central.udpPortDVLRM2;
-			 replicaPortThree = central.udpPortDVLRM3;
+			 replicaPortThree = central.udpCommonReplicaPort;
 		 }
 		 else if(serverFlag == 1) // KKL
 		 {
 			 replicaPortOne = central.udpPortKKLRM1;
 			 replicaPortTwo = central.udpPortKKLRM2;
-			 replicaPortThree = central.udpPortKKLRM3;
+			 replicaPortThree = central.udpCommonReplicaPort;
 		 }
 		 else if(serverFlag == 2) //WST
 		 {
 			 replicaPortOne = central.udpPortWSTRM1;
 			 replicaPortTwo = central.udpPortWSTRM2;
-			 replicaPortThree = central.udpPortWSTRM3;
+			 replicaPortThree = central.udpCommonReplicaPort;
 		 }
 		 
-		 sendUdpReq(replicaPortOne, req + "RM1;");
-		 sendUdpReq(replicaPortTwo, req + "RM2;");
-		 sendUdpReq(replicaPortThree, req + "RM3;");
-		 sendUdpReq(portRM1, req + "RM1;");
-		 sendUdpReq(portRM2, req + "RM2;");
-		 sendUdpReq(portRM3, req + "RM3;");
+		 sendUdpReq(replicaPortOne, req + "RM1;" + reqNo.toString() + ";");
+		 sendUdpReq(replicaPortTwo, req + "RM2;" + reqNo.toString() + ";");
+		 sendUdpReq(replicaPortThree, req + "RM3;" + reqNo.toString() + ";");
+		 sendUdpReq(portRM1, req + "RM1;" + reqNo.toString() + ";");
+		 sendUdpReq(portRM2, req + "RM2;" + reqNo.toString() + ";");
+		 sendUdpReq(portRM3, req + "RM3;" + reqNo.toString() + ";");
+		 reqNo++;
 	  }
 	  
 	  public String sendUdpReq(Integer inServerPort, String req)
@@ -319,6 +355,9 @@ public class frontEnd extends drrsCorbaPOA {
 	  public void run()
 	  {
 		  DatagramSocket clientSocket = null;
+		  Integer portRM1 = central.udpPortRM1;
+		  Integer portRM2 = central.udpPortRM2;
+		  Integer portRM3 = central.udpPortRM3;
 		  while(true) {
 			  try
 			  {
@@ -345,6 +384,42 @@ public class frontEnd extends drrsCorbaPOA {
 				  String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
 				  System.out.println(response);
 				  respQueue.add(response);
+				  if(respQueue.size() == 3) {
+					  String resp1 = respQueue.get(0);
+					  String resp2 = respQueue.get(1);
+					  String resp3 = respQueue.get(2);
+					  resp1 = (resp1.split(";"))[0];
+					  resp2 = (resp2.split(";"))[0];
+					  resp3 = (resp3.split(";"))[0];
+					  respQueue.remove(0);
+					  respQueue.remove(0);
+					  respQueue.remove(0);
+					  if((resp1.equals(resp2) == true) && (resp1.equals(resp3) == true)) {
+						  sendUdpReq(portRM1,"SUCCESS");
+						  sendUdpReq(portRM2,"SUCCESS");
+						  sendUdpReq(portRM3,"SUCCESS");
+						  clientResp.add(resp1);
+						  // client
+					  }
+					  else if((resp1.equals(resp2) == true) && (resp1.equals(resp3) != true)) {
+						  sendUdpReq(portRM1,"SUCCESS");
+						  sendUdpReq(portRM2,"SUCCESS");
+						  sendUdpReq(portRM3,"FAILED");
+						  clientResp.add(resp1);
+					  }
+					  else if((resp1.equals(resp3) == true) && (resp1.equals(resp2) != true)) {
+						  sendUdpReq(portRM1,"SUCCESS");
+						  sendUdpReq(portRM2,"FAILED");
+						  sendUdpReq(portRM3,"SUCCESS");
+						  clientResp.add(resp1);
+					  }
+					  else if((resp3.equals(resp2) == true) && (resp1.equals(resp3) != true)) {
+						  sendUdpReq(portRM1,"FAILED");
+						  sendUdpReq(portRM2,"SUCCESS");
+						  sendUdpReq(portRM3,"SUCCESS");
+						  clientResp.add(resp2);
+					  }
+				  }
 			  }
 			  catch(SocketException e)
 			  {
@@ -370,6 +445,65 @@ public class frontEnd extends drrsCorbaPOA {
 				  }
 			  }
 		  }
+	  }
+	  public String sendUdpReq(Integer inServerPort, String req)
+	  {
+		  DatagramSocket clientSocket = null;
+		  try
+		  {
+			  clientSocket = new DatagramSocket();
+			  InetAddress IPAddress = InetAddress.getByName("localhost"); //InetAddress.getByName(inUrl);
+			  byte[] sendData = new byte[1024];
+			  byte[] receiveData = new byte[1024];
+			  int i = 0;
+			  String request = req;
+			  String sentence = request;
+			  sendData = sentence.getBytes();
+			  DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, inServerPort);
+			  clientSocket.send(sendPacket);
+			  clientSocket.setSoTimeout(3000);
+			  DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			  clientSocket.receive(receivePacket);
+			  
+			  if(receiveData[0] == 0)
+			  {
+				  return null;
+			  }
+			  for(i = 0; i < receiveData.length; i++)
+			  {
+				  if(receiveData[i] == 0)
+				  {
+					  break;
+				  }
+			  }
+			  receiveData.toString();
+			  String response = new String(Arrays.copyOf(receiveData, i), "UTF-8");
+			  return response;
+		  }
+		  catch(SocketException e)
+		  {
+			  e.printStackTrace();
+		  }
+		  catch(IOException e)
+		  {
+			  //e.printStackTrace();
+		  }
+		  catch(NegativeArraySizeException e)
+		  {
+			  // Handled
+		  }
+		  catch(Exception e)
+		  {
+			  e.printStackTrace();
+		  }
+		  finally
+		  {
+			  if(clientSocket != null)
+			  {
+				  clientSocket.close();
+			  }
+		  }
+		  return null;
 	  }
 	};
 }

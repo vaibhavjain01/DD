@@ -143,6 +143,7 @@ public class RMVJ {
 	private FileOutputStream userLog = null;
 	
 	private PrintWriter out;
+	public static Boolean FAILUREFLAG = true;
 	
 	//protected rmirpcImpl(String inServerName, Integer udpPort, central inCenRepoObj)
 	protected RMVJ(String inServerName, Integer udpPort, central inCenRepoObj)
@@ -157,7 +158,7 @@ public class RMVJ {
 	/* Generic */
 	private String genBookingId(String studentId, String date, Integer roomNumber, String timeSlot, String serverName)
 	{
-		return (studentId + "_" + date + "_" + roomNumber.toString() + "_" + timeSlot + "_" + serverName);
+		return (studentId + "_" + date + "_" + roomNumber.toString() + "_" + timeSlot.replaceAll("\\s","") + "_" + serverName);
 	}
 	
 	Thread resetCounter = new Thread()
@@ -229,7 +230,7 @@ public class RMVJ {
 	                if(request.contains("ROOMBOOK") == true)
 	                {
 	                	String params[] = request.split(",");
-	                	response = roomBookerFun(params[1], Integer.parseInt(params[2]), params[3], params[4].substring(0, 13));
+	                	response = roomBookerFun(params[1], Integer.parseInt(params[2]), params[3], params[4].substring(0, 11));
 	                }
 	                else if(request.contains("ROOMCANCEL") == true)
 	                {
@@ -289,6 +290,9 @@ public class RMVJ {
 		PrintWriter out = null;
 		//ArrayList<String> listOfTimeSlots = (ArrayList<String>) Arrays.asList(inListOfTimeSlots);
 		ArrayList<String> listOfTimeSlots = new ArrayList<String>( Arrays.asList(inListOfTimeSlots));
+		if(RMVJ.FAILUREFLAG == true) {
+			return -1;
+		}
 		
 		try
 		{
@@ -384,7 +388,8 @@ public class RMVJ {
 		catch (FileNotFoundException e) 
 		{
 			e.printStackTrace();
-		} 
+		}
+		
 		return rt;
 	}
 	
@@ -768,9 +773,10 @@ public class RMVJ {
 	private String roomBookerFun(String studentId, int roomNumber, String date, String timeSlot)
 	{
 		String rt = "FAILED";
-		
-		synchronized(DateRoomSlots)
-		{
+		studentId = studentId.replaceAll("\\s","");
+		timeSlot = timeSlot.replaceAll("\\s","");
+		/*synchronized(DateRoomSlots)
+		{*/
 			if(DateRoomSlots.containsKey(date))
 			{
 				if((DateRoomSlots.get(date)).containsKey(roomNumber))
@@ -787,14 +793,17 @@ public class RMVJ {
 						{
 							rt = genBookingId(studentId, date, roomNumber, timeSlot, this.serverName);
 							BookingCounter = 1;
-							BookingInfo.put(tmpBookingKey, rt);
-							System.out.println("Booking Procedure Successfully Completed");
-							bookingAvailRecords = updateBookingAvailRecord();
+							synchronized(BookingInfo)
+							{
+								BookingInfo.put(tmpBookingKey, rt);
+								System.out.println("Booking Procedure Successfully Completed");
+								bookingAvailRecords = updateBookingAvailRecord();
+							}
 						}
 					}
 				}
 			}
-		}
+		/*}*/
 		return rt;
 	}
 	
@@ -1135,7 +1144,7 @@ public class RMVJ {
 		
 		if(bookingID.length() > 14)
 		{
-			bookingID = bookingID.substring(0, 41);
+			bookingID = bookingID.substring(0, 39);
 		}
 		else
 		{

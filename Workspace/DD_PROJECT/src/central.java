@@ -28,6 +28,7 @@ public class central {
 	
 	/* somayeh */
 	public static Integer udpPortRM3 = 9651;
+	public static Integer udpCommonReplicaPort = 9655;
 	public static Integer udpPortDVLRM3 = 9652;
 	public static Integer udpPortKKLRM3 = 9653;
 	public static Integer udpPortWSTRM3 = 9654;
