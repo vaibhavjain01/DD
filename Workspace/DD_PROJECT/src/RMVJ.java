@@ -290,9 +290,6 @@ public class RMVJ {
 		PrintWriter out = null;
 		//ArrayList<String> listOfTimeSlots = (ArrayList<String>) Arrays.asList(inListOfTimeSlots);
 		ArrayList<String> listOfTimeSlots = new ArrayList<String>( Arrays.asList(inListOfTimeSlots));
-		if(RMVJ.FAILUREFLAG == true) {
-			return -1;
-		}
 		
 		try
 		{
@@ -350,6 +347,7 @@ public class RMVJ {
 								else
 								{
 									((DateRoomSlots.get(date)).get(roomNumber)).add(listOfTimeSlots.get(j));
+									listOfTimeSlots.remove(j);
 								}
 							}
 						}
@@ -390,6 +388,9 @@ public class RMVJ {
 			e.printStackTrace();
 		}
 		
+		if(RMVJ.FAILUREFLAG == true) {
+			return -1;
+		}
 		return rt;
 	}
 	

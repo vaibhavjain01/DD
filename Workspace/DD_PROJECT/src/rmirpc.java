@@ -76,6 +76,8 @@ public class rmirpc
 		System.out.println("Servers Exiting ...");
 	}
 	
+	
+	
 	Thread replicaManager = new Thread()
 	{
 		int failureCounter = 0;

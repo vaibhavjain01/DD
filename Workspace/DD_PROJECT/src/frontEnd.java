@@ -131,13 +131,31 @@ public class frontEnd extends drrsCorbaPOA {
 			req += listOfTimeSlots[ctr] + ";";
 		}
 		addToMsgQueue(req);
-		while(clientResp.size() < 1) {
-			// do nothing
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = Integer.parseInt(clientResp.get(0));
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = Integer.parseInt(clientResp.get(0));
+			clientResp.remove(0);
+		}
 	}
 
+	public Boolean checkRespSize() {
+		synchronized (clientResp) {
+			if(clientResp.size() < 1) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+	}
+	
 	@Override
 	public void deleteRoom(String adminId, int roomNumber, String date, String[] listOfTimeSlots, IntHolder rt) {
 		// TODO Auto-generated method stub
@@ -147,11 +165,18 @@ public class frontEnd extends drrsCorbaPOA {
 			req += listOfTimeSlots[ctr] + ";";
 		}
 		addToMsgQueue(req);
-		while(clientResp.size() < 1) {
-			// do nothing
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = Integer.parseInt(clientResp.get(0));
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = Integer.parseInt(clientResp.get(0));
+			clientResp.remove(0);
+		}
 	}
 
 	@Override
@@ -160,11 +185,19 @@ public class frontEnd extends drrsCorbaPOA {
 		// TODO Auto-generated method stub
 		String req = "book;" + studentId + ";" + Integer.toString(roomNumber) + ";" + date + ";" + timeSlot + ";" + campusName + ";";
 		addToMsgQueue(req);
-		while(clientResp.size() < 1) {
-			// do nothing
+		
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = clientResp.get(0);
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = clientResp.get(0);
+			clientResp.remove(0);
+		}
 	}
 
 	@Override
@@ -173,11 +206,18 @@ public class frontEnd extends drrsCorbaPOA {
 		String req = "available;" + studentId + ";" + date + ";";
 		addToMsgQueue(req);
 		rt.value = "FAILED";
-		while(clientResp.size() < 1) {
-			// do nothing
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = clientResp.get(0);
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = clientResp.get(0);
+			clientResp.remove(0);
+		}
 	}
 
 	@Override
@@ -185,11 +225,18 @@ public class frontEnd extends drrsCorbaPOA {
 		// TODO Auto-generated method stub
 		String req = "cancel;" + studentId + ";" + bookingID + ";";
 		addToMsgQueue(req);
-		while(clientResp.size() < 1) {
-			// do nothing
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = Integer.parseInt(clientResp.get(0));
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = Integer.parseInt(clientResp.get(0));
+			clientResp.remove(0);
+		}
 	}
 
 	@Override
@@ -199,11 +246,18 @@ public class frontEnd extends drrsCorbaPOA {
 		String req = "change;" + studentId + ";" + booking_id + ";" + newCampusName + ";" + Integer.toString(newRoomNumber) + ";"
 				+ newDate + ";" + newTimeSlot + ";";
 		addToMsgQueue(req);
-		while(clientResp.size() < 1) {
-			// do nothing
+		while(checkRespSize() != true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		rt.value = clientResp.get(0);
-		clientResp.remove(0);
+		synchronized (clientResp) {
+			rt.value = clientResp.get(0);
+			clientResp.remove(0);
+		}
 	}
 
 	@Override
@@ -395,29 +449,37 @@ public class frontEnd extends drrsCorbaPOA {
 					  respQueue.remove(0);
 					  respQueue.remove(0);
 					  if((resp1.equals(resp2) == true) && (resp1.equals(resp3) == true)) {
-						  sendUdpReq(portRM1,"SUCCESS");
-						  sendUdpReq(portRM2,"SUCCESS");
-						  sendUdpReq(portRM3,"SUCCESS");
-						  clientResp.add(resp1);
+						  sendUdpReq(portRM1,"SUCCESS_" + resp1);
+						  sendUdpReq(portRM2,"SUCCESS_" + resp1);
+						  sendUdpReq(portRM3,"SUCCESS_" + resp1);
+						  synchronized(clientResp) {
+							  clientResp.add(resp1);
+						  }
 						  // client
 					  }
 					  else if((resp1.equals(resp2) == true) && (resp1.equals(resp3) != true)) {
-						  sendUdpReq(portRM1,"SUCCESS");
-						  sendUdpReq(portRM2,"SUCCESS");
-						  sendUdpReq(portRM3,"FAILED");
-						  clientResp.add(resp1);
+						  sendUdpReq(portRM1,"SUCCESS_" + resp1);
+						  sendUdpReq(portRM2,"SUCCESS_" + resp1);
+						  sendUdpReq(portRM3,"FAILED_" + resp1);
+						  synchronized(clientResp) {
+							  clientResp.add(resp1);
+						  }
 					  }
 					  else if((resp1.equals(resp3) == true) && (resp1.equals(resp2) != true)) {
-						  sendUdpReq(portRM1,"SUCCESS");
-						  sendUdpReq(portRM2,"FAILED");
-						  sendUdpReq(portRM3,"SUCCESS");
-						  clientResp.add(resp1);
+						  sendUdpReq(portRM1,"SUCCESS_" + resp1);
+						  sendUdpReq(portRM2,"FAILED_" + resp1);
+						  sendUdpReq(portRM3,"SUCCESS_" + resp1);
+						  synchronized(clientResp) {
+							  clientResp.add(resp1);
+						  }
 					  }
 					  else if((resp3.equals(resp2) == true) && (resp1.equals(resp3) != true)) {
-						  sendUdpReq(portRM1,"FAILED");
-						  sendUdpReq(portRM2,"SUCCESS");
-						  sendUdpReq(portRM3,"SUCCESS");
-						  clientResp.add(resp2);
+						  sendUdpReq(portRM1,"FAILED_" + resp3);
+						  sendUdpReq(portRM2,"SUCCESS_" + resp3);
+						  sendUdpReq(portRM3,"SUCCESS_" + resp3);
+						  synchronized(clientResp) {
+							  clientResp.add(resp3);
+						  }
 					  }
 				  }
 			  }
